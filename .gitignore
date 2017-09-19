@@ -1,0 +1,6 @@
+ca-bundle.pem
+*.crt.pem
+*.key.pem
+server/run.bat
+server/node_modules
+server/lib/node_modules
