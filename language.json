@@ -1,0 +1,13 @@
+{
+	"lang": "ko_kr",
+	"menu-server": "Server",
+	"menu-server-on": "Run server",
+	"menu-server-off": "Stop server",
+	"menu-program": "Help",
+	"menu-program-about": "About kServer",
+	"menu-program-site": "Official Site",
+	"menu-program-repo": "Repository",
+	"menu-program-dev": "Developer Tools",
+	"menu-program-exit": "Exit",
+	"welcome": "Hello, admin."
+}
