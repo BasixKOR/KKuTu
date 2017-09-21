@@ -1,0 +1,16 @@
+{
+  "name": "kServer",
+  "version": "1.0.0",
+  "description": "The kServer is server software for run KKuTu.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/pkpai0926/KKuTu",
+  "author": "PkPAI",
+  "devDependencies": {
+    "electron": "^1.6.8",
+    "electron-packager": "^8.7.0",
+    "electron-pug": "^1.5.1"
+  }
+}
