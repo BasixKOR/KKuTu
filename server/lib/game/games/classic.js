@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -40,7 +40,7 @@ exports.getTitle = function(){
 	var l = my.rule;
 	var EXAMPLE;
 	var eng, ja;
-
+	
 	if(!l){
 		R.go("undefinedd");
 		return R;
@@ -51,7 +51,7 @@ exports.getTitle = function(){
 	}
 	EXAMPLE = Const.EXAMPLE_TITLE[l.lang];
 	my.game.dic = {};
-
+	
 	switch(Const.GAME_TYPE[my.mode]){
 		case 'EKT':
 		case 'ESH':
@@ -80,11 +80,11 @@ exports.getTitle = function(){
 			// '$where', eng+"this._id.length == " + Math.max(2, my.round) + " && this.hit <= " + h
 		).limit(20).on(function($md){
 			var list;
-
+			
 			if($md.length){
 				list = shuffle($md);
 				checkTitle(list.shift()._id).then(onChecked);
-
+			
 				function onChecked(v){
 					if(v) R.go(v);
 					else if(list.length) checkTitle(list.shift()._id).then(onChecked);
@@ -99,8 +99,8 @@ exports.getTitle = function(){
 		var R = new Lizard.Tail();
 		var i, list = [];
 		var len;
-
-		/* ���ϰ� �ʹ� �ɸ��ٸ� �ּ��� Ǯ��.
+		
+		/* 부하가 너무 걸린다면 주석을 풀자.
 		R.go(true);
 		return R;
 		*/
@@ -109,23 +109,23 @@ exports.getTitle = function(){
 		}else{
 			len = title.length;
 			for(i=0; i<len; i++) list.push(getAuto.call(my, title[i], getSubChar.call(my, title[i]), 1));
-
+			
 			Lizard.all(list).then(function(res){
 				for(i in res) if(!res[i]) return R.go(EXAMPLE);
-
+				
 				return R.go(title);
 			});
 		}
 		return R;
 	}
 	tryTitle(10);
-
+	
 	return R;
 };
 exports.roundReady = function(){
 	var my = this;
 	if(!my.game.title) return;
-
+	
 	clearTimeout(my.game.turnTimer);
 	my.game.round++;
 	my.game.roundTime = my.time * 1000;
@@ -135,7 +135,7 @@ exports.roundReady = function(){
 		my.game.chain = [];
 		if(my.opts.mission) my.game.mission = getMission(my.rule.lang);
 		if(my.opts.sami) my.game.wordLength = 2;
-
+		
 		my.byMaster('roundReady', {
 			round: my.game.round,
 			char: my.game.char,
@@ -151,7 +151,7 @@ exports.turnStart = function(force){
 	var my = this;
 	var speed;
 	var si;
-
+	
 	if(!my.game.chain) return;
 	my.game.roundTime = Math.min(my.game.roundTime, Math.max(10000, 150000 - my.game.chain.length * 1500));
 	speed = my.getTurnSpeed(my.game.roundTime);
@@ -161,7 +161,7 @@ exports.turnStart = function(force){
 	my.game.turnTime = 15000 - 1400 * speed;
 	my.game.turnAt = (new Date()).getTime();
 	if(my.opts.sami) my.game.wordLength = (my.game.wordLength == 3) ? 2 : 3;
-
+	
 	my.byMaster('turnStart', {
 		turn: my.game.turn,
 		char: my.game.char,
@@ -183,20 +183,24 @@ exports.turnEnd = function(){
 	var my = this;
 	var target;
 	var score;
-
+	
 	if(!my.game.seq) return;
 	target = DIC[my.game.seq[my.game.turn]] || my.game.seq[my.game.turn];
-
+	
 	if(my.game.loading){
 		my.game.turnTimer = setTimeout(my.turnEnd, 100);
 		return;
 	}
 	my.game.late = true;
-	if(target) if(target.game){
-		score = Const.getPenalty(my.game.chain, target.game.score);
-		target.game.score += score;
-	}
 	getAuto.call(my, my.game.char, my.game.subChar, 0).then(function(w){
+		if(target) if(target.game){
+			if(!w && my.opts.safe){
+				score = 0;
+			}else{
+				score = Const.getPenalty(my.game.chain, target.game.score);
+			}
+			target.game.score += score;
+		}
 		my.byMaster('turnEnd', {
 			ok: false,
 			target: target ? target.id : null,
@@ -212,14 +216,14 @@ exports.submit = function(client, text){
 	var my = this;
 	var tv = (new Date()).getTime();
 	var mgt = my.game.seq[my.game.turn];
-
+	
 	if(!mgt) return;
 	if(!mgt.robot) if(mgt != client.id) return;
 	if(!my.game.char) return;
-
+	
 	if(!isChainable(text, my.mode, my.game.char, my.game.subChar)) return client.chat(text);
 	if(my.game.chain.indexOf(text) != -1) return client.publish('turnError', { code: 409, value: text }, true);
-
+	
 	l = my.rule.lang;
 	my.game.loading = true;
 	function onDB($doc){
@@ -227,13 +231,13 @@ exports.submit = function(client, text){
 		var preChar = getChar.call(my, text);
 		var preSubChar = getSubChar.call(my, preChar);
 		var firstMove = my.game.chain.length < 1;
-
+		
 		function preApproved(){
 			function approved(){
 				if(my.game.late) return;
 				if(!my.game.chain) return;
 				if(!my.game.dic) return;
-
+				
 				my.game.loading = false;
 				my.game.late = true;
 				clearTimeout(my.game.turnTimer);
@@ -293,7 +297,7 @@ exports.submit = function(client, text){
 		var type = Const.GAME_TYPE[my.mode];
 		var char = my.game.char, subChar = my.game.subChar;
 		var l = char.length;
-
+		
 		if(!text) return false;
 		if(text.length <= l) return false;
 		if(my.game.wordLength && text.length != my.game.wordLength) return false;
@@ -313,10 +317,10 @@ exports.getScore = function(text, delay, ignoreMission){
 	var my = this;
 	var tr = 1 - delay / my.game.turnTime;
 	var score, arr;
-
+	
 	if(!text || !my.game.chain || !my.game.dic) return 0;
 	score = Const.getPreScore(text, my.game.chain, tr);
-
+	
 	if(my.game.dic[text]) score *= 15 / (my.game.dic[text] + 15);
 	if(!ignoreMission) if(arr = text.match(new RegExp(my.game.mission, "g"))){
 		score += score * 0.5 * arr.length;
@@ -332,7 +336,7 @@ exports.readyRobot = function(robot){
 	var w, text, i;
 	var lmax;
 	var isRev = Const.GAME_TYPE[my.mode] == "KAP";
-
+	
 	getAuto.call(my, my.game.char, my.game.subChar, 2).then(function(list){
 		if(list.length){
 			list.sort(function(a, b){ return b.hit - a.hit; });
@@ -348,7 +352,7 @@ exports.readyRobot = function(robot){
 						}
 						getWishList(Object.keys(ended)).then(function(key){
 							var v = ended[key];
-
+							
 							if(!v) denied();
 							else pickList(v);
 						});
@@ -382,12 +386,12 @@ exports.readyRobot = function(robot){
 		var R = new Lizard.Tail();
 		var wz = [];
 		var res;
-
+		
 		for(i in list) wz.push(getWish(list[i]));
 		Lizard.all(wz).then(function($res){
 			if(!my.game.chain) return;
 			$res.sort(function(a, b){ return a.length - b.length; });
-
+			
 			if(my.opts.manner || !my.game.chain.length){
 				while(res = $res.shift()) if(res.length) break;
 			}else res = $res.shift();
@@ -397,7 +401,7 @@ exports.readyRobot = function(robot){
 	}
 	function getWish(char){
 		var R = new Lizard.Tail();
-
+		
 		DB.kkutu[my.rule.lang].find([ '_id', new RegExp(isRev ? `.${char}$` : `^${char}.`) ]).limit(10).on(function($res){
 			R.go({ char: char, length: $res.length });
 		});
@@ -406,15 +410,15 @@ exports.readyRobot = function(robot){
 };
 function getMission(l){
 	var arr = (l == "ko") ? Const.MISSION_ko : Const.MISSION_en;
-
+	
 	if(!arr) return "-";
 	return arr[Math.floor(Math.random() * arr.length)];
 }
 function getAuto(char, subc, type){
 	/* type
-		0 ������ �ܾ� �ϳ�
-		1 ���� ����
-		2 �ܾ� ����
+		0 무작위 단어 하나
+		1 존재 여부
+		2 단어 목록
 	*/
 	var my = this;
 	var R = new Lizard.Tail();
@@ -423,7 +427,7 @@ function getAuto(char, subc, type){
 	var key = gameType + "_" + keyByOptions(my.opts);
 	var MAN = DB.kkutu_manner[my.rule.lang];
 	var bool = type == 1;
-
+	
 	adc = char + (subc ? ("|"+subc) : "");
 	switch(gameType){
 		case 'EKT':
@@ -445,7 +449,7 @@ function getAuto(char, subc, type){
 	if(!char){
 		console.log(`Undefined char detected! key=${key} type=${type} adc=${adc}`);
 	}
-	MAN.findOne([ '_id', char || "��" ]).on(function($mn){
+	MAN.findOne([ '_id', char || "★" ]).on(function($mn){
 		if($mn && bool){
 			if($mn[key] === null) produce();
 			else R.go($mn[key]);
@@ -457,7 +461,7 @@ function getAuto(char, subc, type){
 		var aqs = [[ '_id', new RegExp(adv) ]];
 		var aft;
 		var lst;
-
+		
 		if(!my.opts.injeong) aqs.push([ 'flag', { '$nand': Const.KOR_FLAG.INJEONG } ]);
 		if(my.rule.lang == "ko"){
 			if(my.opts.loanword) aqs.push([ 'flag', { '$nand': Const.KOR_FLAG.LOANWORD } ]);
@@ -486,7 +490,7 @@ function getAuto(char, subc, type){
 		}
 		DB.kkutu[my.rule.lang].find.apply(this, aqs).limit(bool ? 1 : 123).on(function($md){
 			forManner($md);
-			if(my.game.chain) aft($md.filter(function(item){ return !my.game.chain.includes(item); }));
+			if(my.game.chain) aft($md.filter(function(item){ return !my.game.chain.includes(item._id); }));
 			else aft($md);
 		});
 		function forManner(list){
@@ -503,7 +507,7 @@ function getAuto(char, subc, type){
 }
 function keyByOptions(opts){
 	var arr = [];
-
+	
 	if(opts.injeong) arr.push('X');
 	if(opts.loanword) arr.push('L');
 	if(opts.strict) arr.push('S');
@@ -511,15 +515,15 @@ function keyByOptions(opts){
 }
 function shuffle(arr){
 	var i, r = [];
-
+	
 	for(i in arr) r.push(arr[i]);
 	r.sort(function(a, b){ return Math.random() - 0.5; });
-
+	
 	return r;
 }
 function getChar(text){
 	var my = this;
-
+	
 	switch(Const.GAME_TYPE[my.mode]){
 		case 'EKT': return text.slice(text.length - 3);
 		case 'ESH':
@@ -534,7 +538,7 @@ function getSubChar(char){
 	var c = char.charCodeAt();
 	var k;
 	var ca, cb, cc;
-
+	
 	switch(Const.GAME_TYPE[my.mode]){
 		case "EKT":
 			if(char.length > 2) r = char.slice(1);
@@ -545,12 +549,12 @@ function getSubChar(char){
 			ca = [ Math.floor(k/28/21), Math.floor(k/28)%21, k%28 ];
 			cb = [ ca[0] + 0x1100, ca[1] + 0x1161, ca[2] + 0x11A7 ];
 			cc = false;
-			if(cb[0] == 4357){ // ������ ��, ��
+			if(cb[0] == 4357){ // ㄹ에서 ㄴ, ㅇ
 				cc = true;
 				if(RIEUL_TO_NIEUN.includes(cb[1])) cb[0] = 4354;
 				else if(RIEUL_TO_IEUNG.includes(cb[1])) cb[0] = 4363;
 				else cc = false;
-			}else if(cb[0] == 4354){ // ������ ��
+			}else if(cb[0] == 4354){ // ㄴ에서 ㅇ
 				if(NIEUN_TO_IEUNG.indexOf(cb[1]) != -1){
 					cb[0] = 4363;
 					cc = true;

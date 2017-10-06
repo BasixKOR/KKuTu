@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -39,7 +39,7 @@ exports.init = function(_DB, _DIC){
 exports.getTitle = function(){
 	var R = new Lizard.Tail();
 	var my = this;
-
+	
 	setTimeout(function(){
 		R.go("①②③④⑤⑥⑦⑧⑨⑩");
 	}, 500);
@@ -51,7 +51,7 @@ exports.roundReady = function(){
 	var conf = LANG_STATS[my.rule.lang];
 	var len = conf.len;
 	var i, w;
-
+	
 	clearTimeout(my.game.turnTimer);
 	my.game.round++;
 	my.game.roundTime = my.time * 1000;
@@ -78,7 +78,7 @@ exports.roundReady = function(){
 };
 exports.turnStart = function(){
 	var my = this;
-
+	
 	my.game.late = false;
 	my.game.roundAt = (new Date()).getTime();
 	my.game.qTimer = setTimeout(my.turnEnd, my.game.roundTime);
@@ -88,9 +88,9 @@ exports.turnStart = function(){
 };
 exports.turnEnd = function(){
 	var my = this;
-
+	
 	my.game.late = true;
-
+	
 	my.byMaster('turnEnd', {});
 	my.game._rrt = setTimeout(my.roundReady, 3000);
 };
@@ -98,10 +98,10 @@ exports.submit = function(client, text, data){
 	var my = this;
 	var play = (my.game.seq ? my.game.seq.includes(client.id) : false) || client.robot;
 	var score, i;
-
+	
 	if(!my.game.words) return;
 	if(!text) return;
-
+	
 	if(!play) return client.chat(text);
 	if(text.length < (my.opts.no2 ? 3 : 2)){
 		return client.chat(text);
@@ -111,11 +111,11 @@ exports.submit = function(client, text, data){
 	}
 	DB.kkutu[my.rule.lang].findOne([ '_id', text ]).limit([ '_id', true ]).on(function($doc){
 		if(!my.game.board) return;
-
+		
 		var newBoard = my.game.board;
 		var _newBoard = newBoard;
 		var wl;
-
+		
 		if($doc){
 			wl = $doc._id.split('');
 			for(i in wl){
@@ -167,8 +167,8 @@ exports.getScore = function(text, delay){
 function getBoard(words, len){
 	var str = words.join("").split("");
 	var sl = str.length;
-
+	
 	while(sl++ < len) str.push("　");
-
+	
 	return str.sort(function(){ return Math.random() < 0.5; }).join("");
 }

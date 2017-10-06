@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,14 +25,14 @@ var LANG = 'ko';
 Prompt.start();
 DB.ready = function(){
 	var i;
-
+	
 	for(i in MAPS){
 		MC[MAPS[i].name] = 0;
 		MAPS[i].queue = MAPS[i].queue.split(' ').map(function(item){ return item.split(''); });
 	}
 	DB.kkutu_cw[LANG].find().on(function($res){
 		var j, lis, q;
-
+		
 		for(i in $res){
 			MC[$res[i].map]++;
 			lis = $res[i].data.split('|');
@@ -47,7 +47,7 @@ DB.ready = function(){
 		getBoard(LANG).then(function(data){
 			var j, o, s, t;
 			var res = [];
-
+			
 			console.log(data.map.name, "\n  0 1 2 3 4 5 6 7");
 			for(i=0; i<8; i++){
 				s = i + " ";
@@ -194,7 +194,7 @@ function getMap(){
 		[ x, y, 세로?, 길이 ]
 	*/
 	var i, li, lv = 99999999;
-
+	
 	for(i in MAPS){
 		if(lv > MC[MAPS[i].name]){
 			li = i;
@@ -212,14 +212,14 @@ function getBoard(lang){
 	var map = getMap();
 	var queue = map.queue.slice(0);
 	var regCache = {};
-
+	
 	function process(){
 		var i, m = queue.shift();
 		var arg = [];
 		var reg = "";
 		var p, k;
 		var mapLen = queue.length;
-
+		
 		console.log("[PROCESS] QUEUE: " + mapLen);
 		if(!m){
 			R.go({ map: map, board: board });
@@ -256,7 +256,7 @@ function getBoard(lang){
 			var obj = {};
 			var pick = $doc; // hit 순으로 하나씩 뽑자.
 			var j, l, n;
-
+			
 			if(pick && !words.includes(pick._id)){
 				obj.word = pick._id;
 				obj.mean = pick.mean;
