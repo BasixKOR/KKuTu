@@ -1,31 +1,31 @@
 /**
  * Rule the words! KKuTu Online
  * Copyright (C) 2017 JJoriping(op@jjo.kr)
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 var GLOBAL = require("./sub/global.json");
 
-exports.KKUTU_MAX = 200;
+exports.KKUTU_MAX = 200; //채널당 최대 정원
 exports.MAIN_PORTS = GLOBAL.MAIN_PORTS;
 exports.TEST_PORT = 4040;
-exports.CHAT_SPAM_ADD_DELAY = 2500;
-exports.CHAT_SPAM_CLEAR_DELAY = 7500;
-exports.CHAT_SPAM_LIMIT = 4;
-exports.CHAT_BLOCKED_LENGTH = 10000;
-exports.CHAT_KICK_BY_SPAM = 9;
+exports.CHAT_SPAM_ADD_DELAY = 2500; //from kkutu.io
+exports.CHAT_SPAM_CLEAR_DELAY = 7500; //from kkutu.io
+exports.CHAT_SPAM_LIMIT = 4; //from kkutu.io
+exports.CHAT_BLOCKED_LENGTH = 10000; //from kkutu.io
+exports.CHAT_KICK_BY_SPAM = 9; //from kkutu.io
 exports.SPAM_CLEAR_DELAY = 1600;
 exports.SPAM_ADD_DELAY = 750;
 exports.SPAM_LIMIT = 7;
@@ -106,7 +106,7 @@ exports.RULE = {
 		big: false,
 		ewq: true
 	},
-	'CSQ': { lang: "ko",//자음퀴즈
+	'CSQ': { lang: "ko",//자음 퀴즈
 		rule: "Jaqwi",
 		opts: [ "ijp" ],
 		time: 1,
@@ -243,12 +243,12 @@ exports.KOR_GROUP = new RegExp("(,|^)(" + [
 ].join('|') + ")(,|$)");
 exports.ENG_ID = /^[a-z]+$/i;
 exports.KOR_FLAG = {
-	LOANWORD: 1, // 외래어
-	INJEONG: 2,	// 어인정
-	SPACED: 4, // 띄어쓰기를 해야 하는 어휘
-	SATURI: 8, // 방언
-	OLD: 16, // 옛말
-	MUNHWA: 32 // 문화어
+	LOANWORD: 1, //외래어
+	INJEONG: 2,	//어인정
+	SPACED: 4, //띄어쓰기를 해야 하는 어휘
+	SATURI: 8, //방언
+	OLD: 16, //옛말
+	MUNHWA: 32 //문화어
 };
 exports.WP_REWARD = function(){
 	return 10 + Math.floor(Math.random() * 91);
