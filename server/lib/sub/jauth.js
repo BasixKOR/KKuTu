@@ -20,9 +20,8 @@ const NAVER_ID = "(input here)";
 const NAVER_SECRET = "(input here)";
 const FACEBOOK_ID = "(input here)";
 const FACEBOOK_SECRET = "(input here)";
-const GOOGLE_ID = "(input here).apps.googleusercontent.com";//Google App ID
-const GOOGLE_SECRET = "(input here)";//Google App Secret
-// const TWITTER_KEY = "";
+const GOOGLE_ID = "(input here).apps.googleusercontent.com";
+const GOOGLE_SECRET = "(input here)";
 
 var Web		 = require("request");
 var Lizard	 = require("../sub/lizard");
@@ -64,7 +63,7 @@ exports.login = function(type, token, sid){
 						$p.name = doc.response.name;
 						$p.title = doc.response.nickname;
 						$p.image = doc.response.profile_image;
-						// 망할 셧다운제
+						/* 망할 셧다운제
 						$p._age = doc.response.age.split('-').map(Number);
 						$p._age = { min: ($p._age[0] || 0) - 1, max: $p._age[1] - 1 };
 						$p.birth = doc.response.birthday.split('-').map(Number);
@@ -73,6 +72,7 @@ exports.login = function(type, token, sid){
 							$p._age.max--;
 						}
 						$p.isAjae = Ajae($p.birth, $p._age);
+						*/
 						// $p.sex = doc.response[0].gender[0];
 						R.go($p);
 					}else{
@@ -114,15 +114,17 @@ exports.login = function(type, token, sid){
 						$p.id = doc.id;
 						$p.name = doc.name;
 						$p.image = "https://graph.facebook.com/"+doc.id+"/picture?type=large";
-						// 망할 셧다운제
+						/* 망할 셧다운제
 						$p._age = doc.age_range;
 						if(doc.birthday){
 							$p.birth = doc.birthday.split('/').map(Number);
 						}
 						$p.isAjae = Ajae($p.birth, $p._age);
+						*/
 						// $p.sex = doc.gender[0].toUpperCase();
 						R.go($p);
-					}else{
+					}
+					else{
 						R.go({ error: 401 });
 					}
 				});
@@ -158,13 +160,14 @@ exports.login = function(type, token, sid){
 					$p.name = doc.name;
 					$p.image = doc.picture;
 
-					// 망할 셧다운제
+					/* 망할 셧다운제
 					$p._age = doc.ageRange;
 					if(doc.birthday){
 						$p.birth = doc.birthday.split('-').map(Number);
 						$p.birth.push($p.birth.shift());
 					}
 					$p.isAjae = Ajae($p.birth, $p._age);
+					*/
 					R.go($p);
 				});
 			}
