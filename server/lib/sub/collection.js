@@ -1,17 +1,17 @@
-/**
+/*
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping(op@jjo.kr)
- * 
+ * Copyright (C) 2017 JJoriping (op@jjo.kr)
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -22,7 +22,7 @@ var _Escape = require("pg-escape");
 var Escape = function(str){
 	var i = 1;
 	var args = arguments;
-	
+
 	return str.replace(/%([%sILQkKV])/g, function(_, type){
 		if ('%' == type) return '%';
 
@@ -44,28 +44,28 @@ var JLog = require('./jjlog');
 // (JSON ENDPOINT) KEY
 _Escape.asSKey = function(val){
 	var c;
-	
+
 	if(val.indexOf(".") == -1) return _Escape.asKey(val);
 	c = val.split('.').map(function(item, x){ return x ? _Escape.literal(item) : _Escape.ident(item); });
-	
+
 	return c.slice(0, c.length - 1).join('->') + '->>' + c[c.length - 1];
 };
 // KEY
 _Escape.asKey = function(val){
 	if(val.indexOf(".") == -1){
 		var v = _Escape.ident(val);
-		
+
 		if(v.charAt(0) == "\"") return v;
 		else return "\"" + v + "\"";
 	}
 	var ar = val.split('.'), aEnd = ar.pop();
-	
+
 	return ar.map(function(item, x){ return x ? `'${_Escape.literal(item)}'` : _Escape.ident(item); }).join('->') + `->>'${aEnd}'`;
 };
 // VALUE
 _Escape.asValue = function(val){
 	var type = typeof val;
-	
+
 	if(val instanceof Array) return _Escape.literal("{" + val.join(',') + "}");
 	if(type == 'number') return val;
 	if(type == 'string') return _Escape.literal(val);
@@ -75,34 +75,34 @@ _Escape.asValue = function(val){
 global.getType = function(obj){
 	if(obj === undefined) return "";
 	var s = obj.constructor.toString();
-	
+
 	return s.slice(9, s.indexOf("("));
 };
 function query(_q){
 	var i, res = [];
-	
+
 	for(i in _q) if(_q[i]) res.push(_q[i]);
-	
+
 	return res;
 }
 function oQuery(_q){
 	var i, res = [];
-	
+
 	for(i in _q) if(_q[i]) res.push([ i, _q[i] ]);
-	
+
 	return res;
 }
 function uQuery(q, id){
 	var i, res = [], noId = true;
-	
+
 	for(i in q){
 		var c = q[i][0];
-		
+
 		if(q[i][0] == "_id"){
 			noId = false;
 		}else if(c.split) if((c = c.split('.')).length > 1){
 			var jo = {}, j = jo;
-			
+
 			q[i][0] = c.shift();
 			while(c.length > 1){
 				j = j[c.shift()] = {};
@@ -117,7 +117,7 @@ function uQuery(q, id){
 }
 function sqlSelect(q){
 	if(!Object.keys(q).length) return "*";
-	
+
 	return q.map(function(item){
 		if(!item[1]) throw new Error(item[0]);
 		return Escape("%K", item[0]);
@@ -125,10 +125,10 @@ function sqlSelect(q){
 }
 function sqlWhere(q){
 	if(!Object.keys(q).length) return "TRUE";
-	
+
 	function wSearch(item){
 		var c;
-		
+
 		if((c = item[1]['$not']) !== undefined) return Escape("NOT (%s)", wSearch([ item[0], c ]));
 		if((c = item[1]['$nand']) !== undefined) return Escape("%K & %V = 0", item[0], c);
 		if((c = item[1]['$lte']) !== undefined) return Escape("%K<=%V", item[0], c);
@@ -163,7 +163,7 @@ function sqlSet(q, inc){
 	}
 	return q.map(function(item){
 		var c = item[0].split('.');
-		
+
 		if(c.length == 1){
 			return doN(item[0], item[1]);
 		}
@@ -189,7 +189,7 @@ function isDataAvailable(data, chk){
 	var i, j;
 	var path;
 	var cursor;
-	
+
 	if(data == null) return false;
 	for(i in chk){
 		cursor = data;
@@ -200,18 +200,18 @@ function isDataAvailable(data, chk){
 			else return false;
 		}
 	}
-	
+
 	return true;
 }
 exports.Agent = function(type, origin){
 	var my = this;
-	
+
 	this.RedisTable = function(key){
 		var my = this;
-		
+
 		my.putGlobal = function(id, score){
 			var R = new Lizard.Tail();
-			
+
 			origin.zadd([ key, score, id ], function(err, res){
 				R.go(id);
 			});
@@ -219,7 +219,7 @@ exports.Agent = function(type, origin){
 		};
 		my.getGlobal = function(id){
 			var R = new Lizard.Tail();
-			
+
 			origin.zrevrank([ key, id ], function(err, res){
 				R.go(res);
 			});
@@ -227,12 +227,12 @@ exports.Agent = function(type, origin){
 		};
 		my.getPage = function(pg, lpp){
 			var R = new Lizard.Tail();
-			
+
 			origin.zrevrange([ key, pg * lpp, (pg + 1) * lpp - 1, "WITHSCORES" ], function(err, res){
 				var A = [];
 				var rank = pg * lpp;
 				var i, len = res.length;
-				
+
 				for(i=0; i<len; i += 2){
 					A.push({ id: res[i], rank: rank++, score: res[i+1] });
 				}
@@ -243,17 +243,17 @@ exports.Agent = function(type, origin){
 		my.getSurround = function(id, rv){
 			var R = new Lizard.Tail();
 			var i;
-			
+
 			rv = rv || 8;
 			origin.zrevrank([ key, id ], function(err, res){
 				var range = [ Math.max(0, res - Math.round(rv / 2 + 1)), 0 ];
-				
+
 				range[1] = range[0] + rv - 1;
 				origin.zrevrange([ key, range[0], range[1], "WITHSCORES" ], function(err, res){
 					if(!res) return R.go({ target: id, data: [] });
-					
+
 					var A = [], len = res.length;
-					
+
 					for(i=0; i<len; i += 2){
 						A.push({ id: res[i], rank: range[0]++, score: res[i+1] });
 					}
@@ -274,12 +274,12 @@ exports.Agent = function(type, origin){
 			*/
 			_my.second = {};
 			_my.sorts = null;
-			
+
 			this.on = function(f, chk, onFail){
 				var sql;
 				var sq = _my.second['$set'];
 				var uq;
-				
+
 				function preCB(err, res){
 					if(err){
 						JLog.error("Error when querying: "+sql);
@@ -359,7 +359,7 @@ exports.Agent = function(type, origin){
 				// JLog.log("Query: " + sql.slice(0, 100));
 				origin.query(sql, preCB);
 				/*if(_my.findLimit){
-					
+
 					c = my.source[mode](q, flag, { limit: _my.findLimit }, preCB);
 				}else{
 					c = my.source[mode](q, _my.second, flag, preCB);
@@ -432,10 +432,10 @@ exports.Agent = function(type, origin){
 		var _my = this;
 		_my.second = {};
 		_my.sorts = null;
-		
+
 		this.on = function(f, chk, onFail){
 			var c;
-			
+
 			function preCB(err, doc){
 				if(mode == "find"){
 					if(_my.sorts){
@@ -450,7 +450,7 @@ exports.Agent = function(type, origin){
 					JLog.error("Context: "+err.toString());
 					return;
 				}
-				
+
 				if(f){
 					if(chk){
 						if(isDataAvailable(doc, chk)) f(doc);
@@ -462,7 +462,7 @@ exports.Agent = function(type, origin){
 					}else f(doc);
 				}
 			}
-			
+
 			if(_my.findLimit){
 				c = my.source[mode](q, flag, { limit: _my.findLimit }, preCB);
 			}else{
