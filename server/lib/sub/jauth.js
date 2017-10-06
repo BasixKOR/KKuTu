@@ -1,6 +1,6 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const NAVER_ID = "네이버 앱 아이디";
-const NAVER_SECRET = "네이버 앱 시크릿";
-const GOOGLE_ID = "Google App ID";
-const GOOGLE_API = "Google API ID";
-const GOOGLE_SECRET = "Google App Secret";
+const NAVER_ID = "(input here)";
+const NAVER_SECRET = "(input here)";
+const FACEBOOK_ID = "(input here)";
+const FACEBOOK_SECRET = "(input here)";
+const GOOGLE_ID = "(input here).apps.googleusercontent.com";//Google App ID
+const GOOGLE_SECRET = "(input here)";//Google App Secret
 // const TWITTER_KEY = "";
 
 var Web		 = require("request");
 var Lizard	 = require("../sub/lizard");
 var JLog	 = require("../sub/jjlog");
-// var Ajae	 = require("../sub/ajae").checkAjae;
+var Ajae	 = require("../sub/ajae").checkAjae;
 
-exports.login = function(type, token, sid, token2){
+exports.login = function(type, token, sid){
 	var R = new Lizard.Tail();
 	var now = new Date();
 	var MONTH = now.getMonth() + 1, DATE = now.getDate();
@@ -63,8 +64,7 @@ exports.login = function(type, token, sid, token2){
 						$p.name = doc.response.name;
 						$p.title = doc.response.nickname;
 						$p.image = doc.response.profile_image;
-
-						/* 망할 셧다운제
+						// 망할 셧다운제
 						$p._age = doc.response.age.split('-').map(Number);
 						$p._age = { min: ($p._age[0] || 0) - 1, max: $p._age[1] - 1 };
 						$p.birth = doc.response.birthday.split('-').map(Number);
@@ -73,7 +73,6 @@ exports.login = function(type, token, sid, token2){
 							$p._age.max--;
 						}
 						$p.isAjae = Ajae($p.birth, $p._age);
-						*/
 						// $p.sex = doc.response[0].gender[0];
 						R.go($p);
 					}else{
@@ -83,12 +82,13 @@ exports.login = function(type, token, sid, token2){
 			}
 		});
 	}else if(type == "facebook"){
-		$p.token = token;
 		Web.get({
-			url: "https://graph.facebook.com/v2.4/me",
+			url: "https://graph.facebook.com/v2.4/oauth/access_token",
 			qs: {
-				access_token: $p.token,
-				fields: "id,name,gender"
+				client_id: FACEBOOK_ID,
+				redirect_uri: "http://kkutu.io/?authType=facebook",
+				client_secret: FACEBOOK_SECRET,
+				code: token
 			}
 		}, function(err, res, doc){
 			if(err){
@@ -97,71 +97,76 @@ exports.login = function(type, token, sid, token2){
 			}else{
 				try{ doc = JSON.parse(doc); }catch(e){ return R.go({ error: 500 }); }
 
-				$p.type = "facebook";
-				$p.id = doc.id;
-				$p.name = doc.name;
-				$p.image = "https://graph.facebook.com/"+doc.id+"/picture?type=large";
+				$p.token = doc.access_token;
+				Web.get({
+					url: "https://graph.facebook.com/v2.4/me",
+					qs: {
+						access_token: $p.token,
+						fields: "id,name,gender"
+					}
+				}, function(err, res, doc){
+					if(err) return R.go({ error: 400 });
+					if(!doc) return R.go({ error: 500 });
+					try{ doc = JSON.parse(doc); }catch(e){ return R.go({ error: 500 }); }
 
-				/* 망할 셧다운제
-
-				$p._age = doc.age_range;
-				if(doc.birthday){
-					$p.birth = doc.birthday.split('/').map(Number);
-				}
-				$p.isAjae = Ajae($p.birth, $p._age);
-				*/
-				// $p.sex = doc.gender[0].toUpperCase();
-				R.go($p);
+					if(!doc.error){
+						$p.type = "facebook";
+						$p.id = doc.id;
+						$p.name = doc.name;
+						$p.image = "https://graph.facebook.com/"+doc.id+"/picture?type=large";
+						// 망할 셧다운제
+						$p._age = doc.age_range;
+						if(doc.birthday){
+							$p.birth = doc.birthday.split('/').map(Number);
+						}
+						$p.isAjae = Ajae($p.birth, $p._age);
+						// $p.sex = doc.gender[0].toUpperCase();
+						R.go($p);
+					}else{
+						R.go({ error: 401 });
+					}
+				});
 			}
 		});
 	}else if(type == "google"){
-		$p.token = token;
-		Web.get({
-			url: "https://www.googleapis.com/oauth2/v3/tokeninfo",
-			qs: {
-				id_token: token
-			}
-		}, function(err, res, doc){
+		Web.post("https://www.googleapis.com/oauth2/v4/token", { form: {
+			code: token,
+			client_id: GOOGLE_ID,
+			client_secret: GOOGLE_SECRET,
+			redirect_uri: "http://kkutu.io/?authType=google",
+			grant_type: "authorization_code"
+		} }, function(err, res, doc){
 			if(err){
 				JLog.warn("Error on oAuth-google: "+err.toString());
 				R.go({ error: 500 });
 			}else{
 				try{ doc = JSON.parse(doc); }catch(e){ return R.go({ error: 500 }); }
-				if(doc.aud != GOOGLE_ID) return R.go({ error: 401 });
-				if(!doc.email_verified) return R.go({ error: 402 });
 
-				/*Web.get({
-					url: "https://www.googleapis.com/plus/v1/people/me",
+				$p.token = doc.id_token;
+				Web.get({
+					url: "https://www.googleapis.com/oauth2/v3/tokeninfo",
 					qs: {
-						fields: "ageRange,birthday",
-						// key: GOOGLE_API,
-						access_token: token2
-					},
-					headers: { 'Authorization': "Bearer " + token2 }
-				}, function(_err, _res, _doc){
-					if(_err){
-						JLog.warn("Error on profile-google: "+err.toString());
-						R.go({ error: 500 });
-					}else{
-						try{ _doc = JSON.parse(_doc); }catch(e){ return R.go({ error: 500 }); }
-						if(_doc.error) return R.go({ error: _doc.error.code });*/
-
-						$p.type = "google";
-						$p.id = doc.sub;
-						$p.name = doc.name;
-						$p.image = doc.picture;
-
-						R.go($p);
-						/* 망할 셧다운제
-
-						$p._age = _doc.ageRange;
-						if(_doc.birthday){
-							$p.birth = _doc.birthday.split('-').map(Number);
-							$p.birth.push($p.birth.shift());
-						}
-						$p.isAjae = Ajae($p.birth, $p._age);
+						id_token: $p.token
 					}
-				});*/
+				}, function(err, res, doc){
+					try{ doc = JSON.parse(doc); }catch(e){ return R.go({ error: 500 }); }
+					if(doc.aud != GOOGLE_ID) return R.go({ error: 401 });
+					if(!doc.email_verified) return R.go({ error: 402 });
+
+					$p.type = "google";
+					$p.id = doc.sub;
+					$p.name = doc.name;
+					$p.image = doc.picture;
+
+					// 망할 셧다운제
+					$p._age = doc.ageRange;
+					if(doc.birthday){
+						$p.birth = doc.birthday.split('-').map(Number);
+						$p.birth.push($p.birth.shift());
+					}
+					$p.isAjae = Ajae($p.birth, $p._age);
+					R.go($p);
+				});
 			}
 		});
 	}
