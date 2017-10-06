@@ -16,13 +16,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-var File = require("fs");
+var crypto = require('crypto');
 
-global.isPublic = false;
-
-File.readFile(__dirname + "/pub.txt", function(err, doc){
-	if(doc){
-		global.isPublic = true;
-	}
-	if(exports.ready) exports.ready(global.isPublic);
-});
+exports.encrypt = function(text,key){
+	var cipher = crypto.createCipher('aes-256-cbc',key);
+	var encipheredContent = cipher.update(text,'utf8','hex');
+	encipheredContent += cipher.final('hex');
+	return encipheredContent;
+}
+exports.decrypt = function(text,key){
+	var decipher = crypto.createDecipher('aes-256-cbc',key);
+	var decipheredPlaintext = decipher.update(text,'hex','utf8');
+	decipheredPlaintext += decipher.final('utf8');
+	return decipheredPlaintext;
+}
