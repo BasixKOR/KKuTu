@@ -1,6 +1,6 @@
 //-
 	Rule the words! KKuTu Online
-	Copyright (C) 2017 PkPAI (admin@pkpai.kr)
+	Copyright (C) 2017 JJoriping(op@jjo.kr)
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -15,6 +15,9 @@
 	You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 -
+	const MENU = [
+		{ key: 'HOME', href: "/" }
+	];
 	const PUBLIC = locals.published;
 	
 	var DATA = locals.data || {};
@@ -40,20 +43,25 @@
 	};
 
 mixin Menu()
-	nav.navbar.navbar-default.navbar-fixed-top
-		.container
-			.navbar-header
-				a.navbar-brand(href='https://kkutu.pkpai.kr')
-					img(alt='로고', height='32px', src='https://cdn.nyange.xyz/img/logo/logo_symbol.svg')
-				a.navbar-brand-sub(href='https://kkutu.pkpai.kr') 끄투
-			ul.nav.navbar-nav.navbar-right
-				div#account
-					span#profile= SESSION.profile ? JSON.stringify(SESSION.profile) : '{}'
-					div#account-info
-					block
-						
+	div.Menu
+		- for(i in MENU)
+			- if(MENU[i].href)
+				button.menu-btn(id='menu-item-'+MENU[i].key, onclick='location.href = "'+MENU[i].href+'";')!= L(MENU[i].key)
+			- else if(MENU[i].sub)
+				div.menu-btn(id='menu-item-'+MENU[i].key)!= L(MENU[i].key)
+					div.menu-sub-separator
+					- for(j in MENU[i].sub)
+						div.menu-sub-btn(onclick='location.href = "'+MENU[i].sub[j].href+'";')!= L(MENU[i].sub[j].key)
+		div#account
+			span#profile= SESSION.profile ? JSON.stringify(SESSION.profile) : '{}'
+			div#account-info
+
 mixin MMenu()
 	div.Menu
+		div.menu-btn(id='menu-item-GAMES')
+			+FA('bars')
+			+separator(10)
+			div.menu-sub-btn(onclick='location.href = "/";', style='margin: 7px 0px; height: 25px;')!= L('HOME')
 		div#account
 			span#profile= SESSION.profile ? JSON.stringify(SESSION.profile) : '{}'
 			div#account-info
@@ -67,12 +75,11 @@ mixin FA(id)
 	i(class="fa fa-"+id)
 
 mixin separator(len)
-	div(style="float: left; width: 100%; margin: "+len+"px 0px;")
+	div(style="float: left; width: 100%; margin-top: "+len+"px;")
 	
 mixin PageHead(min)
 	if !min
-		//link(rel='stylesheet', href=(locals.mobile && !locals.as_pc) ? '/css/m_style.css' : '/css/style.css')
-		link(rel='stylesheet', href='/css/style.css')
+		link(rel='stylesheet', href=(locals.mobile && !locals.as_pc) ? '/css/m_style.css' : '/css/style.css')
 		link(rel='stylesheet', href='/css/fa.css')
 		link(rel='stylesheet', href='/css/expl.css')
 	script(type='text/javascript', src='/js/jquery.js')

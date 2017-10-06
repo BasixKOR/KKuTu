@@ -1,18 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- * Copyright (C) 2017 PkPAI (admin@pkpai.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -27,24 +26,24 @@ exports.run = function(Server, page){
 
 Server.get("/gwalli", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	req.session.admin = true;
 	page(req, res, "gwalli");
 });
 Server.get("/gwalli/injeong", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	MainDB.kkutu_injeong.find([ 'theme', { $not: "~" } ]).limit(100).on(function($list){
 		res.send({ list: $list });
 	});
 });
 Server.get("/gwalli/gamsi", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	MainDB.users.findOne([ '_id', req.query.id ]).limit([ 'server', true ]).on(function($u){
 		if(!$u) return res.sendStatus(404);
 		var data = { _id: $u._id, server: $u.server };
-
+		
 		MainDB.session.findOne([ 'profile.id', $u._id ]).limit([ 'profile', true ]).on(function($s){
 			if($s) data.title = $s.profile.title || $s.profile.name;
 			res.send(data);
@@ -53,7 +52,7 @@ Server.get("/gwalli/gamsi", function(req, res){
 });
 Server.get("/gwalli/users", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	if(req.query.name){
 		MainDB.session.find([ 'profile.title', req.query.name ]).on(function($u){
 			if($u) return onSession($u);
@@ -70,7 +69,7 @@ Server.get("/gwalli/users", function(req, res){
 	}
 	function onSession(list){
 		var board = {};
-
+		
 		Lizard.all(list.map(function(v){
 			if(board[v.profile.id]) return null;
 			else{
@@ -83,7 +82,7 @@ Server.get("/gwalli/users", function(req, res){
 	}
 	function getProfile(id){
 		var R = new Lizard.Tail();
-
+		
 		if(id) MainDB.users.findOne([ '_id', id ]).on(function($u){
 			R.go($u);
 		}); else R.go(null);
@@ -92,9 +91,9 @@ Server.get("/gwalli/users", function(req, res){
 });
 Server.get("/gwalli/kkutudb/:word", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	var TABLE = MainDB.kkutu[req.query.lang];
-
+	
 	if(!TABLE) res.sendStatus(400);
 	if(!TABLE.findOne) res.sendStatus(400);
 	TABLE.findOne([ '_id', req.params.word ]).on(function($doc){
@@ -103,9 +102,9 @@ Server.get("/gwalli/kkutudb/:word", function(req, res){
 });
 Server.get("/gwalli/kkututheme", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	var TABLE = MainDB.kkutu[req.query.lang];
-
+	
 	if(!TABLE) res.sendStatus(400);
 	if(!TABLE.find) res.sendStatus(400);
 	TABLE.find([ 'theme', new RegExp(req.query.theme) ]).limit([ '_id', true ]).on(function($docs){
@@ -114,10 +113,10 @@ Server.get("/gwalli/kkututheme", function(req, res){
 });
 Server.get("/gwalli/kkutuhot", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	File.readFile(GLOBAL.KKUTUHOT_PATH, function(err, file){
 		var data = JSON.parse(file.toString());
-
+		
 		parseKKuTuHot().then(function($kh){
 			res.send({ prev: data, data: $kh });
 		});
@@ -125,9 +124,9 @@ Server.get("/gwalli/kkutuhot", function(req, res){
 });
 Server.get("/gwalli/shop/:key", function(req, res){
 	if(!checkAdmin(req, res)) return;
-
+	
 	var q = (req.params.key == "~ALL") ? undefined : [ '_id', req.params.key ];
-
+	
 	MainDB.kkutu_shop.find(q).on(function($docs){
 		MainDB.kkutu_shop_desc.find(q).on(function($desc){
 			res.send({ goods: $docs, desc: $desc });
@@ -137,10 +136,10 @@ Server.get("/gwalli/shop/:key", function(req, res){
 Server.post("/gwalli/injeong", function(req, res){
 	if(!checkAdmin(req, res)) return;
 	if(req.body.pw != GLOBAL.PASS) return res.sendStatus(400);
-
+	
 	var list = JSON.parse(req.body.list).list;
 	var themes;
-
+	
 	list.forEach(function(v){
 		if(v.ok){
 			req.body.nof = true;
@@ -163,16 +162,16 @@ Server.post("/gwalli/kkutudb", onKKuTuDB);
 function onKKuTuDB(req, res){
 	if(!checkAdmin(req, res)) return;
 	if(req.body.pw != GLOBAL.PASS) return res.sendStatus(400);
-
+	
 	var theme = req.body.theme;
 	var list = req.body.list;
 	var TABLE = MainDB.kkutu[req.body.lang];
-
+	
 	if(list) list = list.split(/[,\r\n]+/);
 	else return res.sendStatus(400);
 	if(!TABLE) res.sendStatus(400);
 	if(!TABLE.insert) res.sendStatus(400);
-
+	
 	noticeAdmin(req, theme, list.length);
 	list.forEach(function(item){
 		if(!item) return;
@@ -182,7 +181,7 @@ function onKKuTuDB(req, res){
 			if(!$doc) return TABLE.insert([ '_id', item ], [ 'type', "INJEONG" ], [ 'theme', theme ], [ 'mean', "＂1＂" ], [ 'flag', 2 ]).on();
 			var means = $doc.mean.split(/＂[0-9]+＂/g).slice(1);
 			var len = means.length;
-
+			
 			if($doc.theme.indexOf(theme) == -1){
 				$doc.type += ",INJEONG";
 				$doc.theme += "," + theme;
@@ -200,10 +199,10 @@ Server.post("/gwalli/kkutudb/:word", function(req, res){
 	if(req.body.pw != GLOBAL.PASS) return res.sendStatus(400);
 	var TABLE = MainDB.kkutu[req.body.lang];
 	var data = JSON.parse(req.body.data);
-
+	
 	if(!TABLE) res.sendStatus(400);
 	if(!TABLE.upsert) res.sendStatus(400);
-
+	
 	noticeAdmin(req, data._id);
 	if(data.mean == ""){
 		TABLE.remove([ '_id', data._id ]).on(function($res){
@@ -218,11 +217,11 @@ Server.post("/gwalli/kkutudb/:word", function(req, res){
 Server.post("/gwalli/kkutuhot", function(req, res){
 	if(!checkAdmin(req, res)) return;
 	if(req.body.pw != GLOBAL.PASS) return res.sendStatus(400);
-
+	
 	noticeAdmin(req);
 	parseKKuTuHot().then(function($kh){
 		var i, j, obj = {};
-
+		
 		for(i in $kh){
 			for(j in $kh[i]){
 				obj[$kh[i][j]._id] = $kh[i][j].hit;
@@ -236,9 +235,9 @@ Server.post("/gwalli/kkutuhot", function(req, res){
 Server.post("/gwalli/users", function(req, res){
 	if(!checkAdmin(req, res)) return;
 	if(req.body.pw != GLOBAL.PASS) return res.sendStatus(400);
-
+	
 	var list = JSON.parse(req.body.list).list;
-
+	
 	list.forEach(function(item){
 		MainDB.users.upsert([ '_id', item._id ]).set(item).on();
 	});
@@ -247,9 +246,9 @@ Server.post("/gwalli/users", function(req, res){
 Server.post("/gwalli/shop", function(req, res){
 	if(!checkAdmin(req, res)) return;
 	if(req.body.pw != GLOBAL.PASS) return res.sendStatus(400);
-
+	
 	var list = JSON.parse(req.body.list).list;
-
+	
 	list.forEach(function(item){
 		item.core.options = JSON.parse(item.core.options);
 		MainDB.kkutu_shop.upsert([ '_id', item._id ]).set(item.core).on();
@@ -278,7 +277,7 @@ function checkAdmin(req, res){
 }
 function parseKKuTuHot(){
 	var R = new Lizard.Tail();
-
+		
 	Lizard.all([
 		query(`SELECT * FROM kkutu_ko WHERE hit > 0 ORDER BY hit DESC LIMIT 50`),
 		query(`SELECT * FROM kkutu_ko WHERE _id ~ '^...$' AND hit > 0 ORDER BY hit DESC LIMIT 50`),
@@ -289,7 +288,7 @@ function parseKKuTuHot(){
 	});
 	function query(q){
 		var R = new Lizard.Tail();
-
+		
 		MainDB.kkutu['ko'].direct(q, function(err, $docs){
 			if(err) return JLog.error(err.toString());
 			R.go($docs.rows);

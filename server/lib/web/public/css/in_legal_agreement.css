@@ -16,21 +16,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-var Cluster = require("cluster");
-var CPU = Number(process.argv[2]); //require("os").cpus().length;
-
-if(isNaN(CPU)){
-	console.log(`Invalid CPU Number ${CPU}`);
-	return;
-	// process.exit(1);
+h1{
+	padding-left: 10px;
+	margin-bottom: 20px;
 }
-if(Cluster.isMaster){
-	for(var i=0; i<CPU; i++){
-		Cluster.fork({ SERVER_NO_FORK: true, WS_KEY: i+1 });
-	}
-	Cluster.on('exit', function(w){
-		console.log(`Worker ${w.process.pid} died`);
-	});
-}else{
-	require("./main.js");
+h2{
+	margin-top: 10px;
+}
+h4{
+	padding: 10px;
+	margin-bottom: 5px;
+	color: #CCCCCC;
+	line-height: 2;
+}
+#Middle{
+	padding-left: 5px;
+	border-left: 1px solid #444444;
+	margin-left: 30px !important;
+	margin-bottom: 30px;
+	width: auto;
 }

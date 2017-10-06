@@ -1,18 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- * Copyright (C) 2017 PkPAI (admin@pkpai.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,7 +19,7 @@
 $lib.Hunmin.roundReady = function(data){
 	var i, len = $data.room.game.title.length;
 	var $l;
-
+	
 	clearBoard();
 	$data._roundTime = $data.room.time * 1000;
 	$stage.game.display.html($data._char = "&lt;" + data.theme + "&gt;");
@@ -38,7 +37,7 @@ $lib.Hunmin.turnStart = function(data){
 	$data._tid = $data.room.game.seq[data.turn];
 	if($data._tid.robot) $data._tid = $data._tid.id;
 	data.id = $data._tid;
-
+	
 	$stage.game.display.html($data._char);
 	$("#game-user-"+data.id).addClass("game-user-current");
 	if(!$data._replay){
@@ -49,7 +48,7 @@ $lib.Hunmin.turnStart = function(data){
 		}
 	}
 	$stage.game.items.html($data.mission = data.mission);
-
+	
 	ws.onmessage = _onMessage;
 	clearInterval($data._tTime);
 	clearTrespasses();
@@ -71,7 +70,7 @@ $lib.Hunmin.turnEnd = function(id, data){
 		.html((data.score > 0) ? ("+" + (data.score - data.bonus)) : data.score);
 	var $uc = $(".game-user-current");
 	var hi;
-
+	
 	$data._turnSound.stop();
 	addScore(id, data.score);
 	clearInterval($data._tTime);
@@ -90,7 +89,7 @@ $lib.Hunmin.turnEnd = function(id, data){
 		data.hint = data.hint._id;
 		hi = data.hint.indexOf($data._chars[0]);
 		if(hi == -1) hi = data.hint.indexOf($data._chars[1]);
-
+		
 		$stage.game.display.empty()
 			.append($("<label>").html(data.hint.slice(0, hi + 1)))
 			.append($("<label>").css('color', "#AAAAAA").html(data.hint.slice(hi + 1)));
@@ -100,7 +99,7 @@ $lib.Hunmin.turnEnd = function(id, data){
 			var $bc = $("<div>")
 				.addClass("deltaScore bonus")
 				.html("+" + data.bonus);
-
+			
 			drawObtainedScore($uc, $bc);
 		}, 500);
 	}

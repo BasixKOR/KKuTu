@@ -1,6 +1,6 @@
 //-
 	Rule the words! KKuTu Online
-	Copyright (C) 2017 JJoriping (op@jjo.kr)
+	Copyright (C) 2017 JJoriping(op@jjo.kr)
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
 	
 	You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
-	
 include module
 
 - if(LANG == undefined) LANG = locals.locale;
@@ -24,7 +23,7 @@ html
 	head
 		block Subject
 		meta(charset='utf-8')
-		meta(name='viewport', content='width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no')
+		meta(name='viewport', content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
 		script(type='text/javascript').
 			function getObject(v, i){
 				Object.defineProperty(v, i, { value: v[i], writable: false });
@@ -38,30 +37,30 @@ html
 			meta(name='keywords', content=LANG['meta_keys'] || L('META_KEYS'))
 		
 		block OpenGraph
-			meta(property='og:image', content='#{locals.ogImage || "https://cdn.nyange.xyz/meta/logo.png"}')
-			meta(property='og:url', content='#{locals.ogURL || "http://kkutu.pkpai.kr"}')
-			meta(property='og:title', content='#{locals.ogTitle || "호박파이 끄투"}')
-			meta(property='og:description', content='#{locals.ogDescription || "호박파이 끄투에서 끝말잇기, 앞말잇기 게임을!"}')
+			meta(property='og:image', content=locals.ogImage || L('OG_IMAGE'))
+			meta(property='og:url', content=locals.ogURL || L('OG_URL'))
+			meta(property='og:title', content=locals.ogTitle || L('OG_TITLE'))
+			meta(property='og:description', content=locals.ogDescription || L('OG_DESC'))
 		
 		+PageHead()
 			block Preload
 		block CSS
 		block JS
 	
-	body
-		+Menu()
+	body(style='min-width: 200px;')
 		div#Top
+			+Menu()
+			div#global-notice
+				div#gn-content
+					include ../public/kkutu_head.html
 			block Top
 		div#Jungle
 			span#mobile= locals.mobile
 			span#summonerID= DATA._id
-			#Background
+			img#Background(src='/img/bg/'+(locals.m_bg || 'def.png'))
 			block Jungle
 		div#Middle
 			block Middle
 		div#Bottom
 			block Bottom
-			div.bottom-legal
-				a(href='?pc=true')= L('AS_PC')
-			div.bottom-legal!= L('GPL')
-			+separator(40)
+			+separator(10)
