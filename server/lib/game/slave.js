@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,6 +25,7 @@ var Server = new WebSocket.Server({
 });
 var Master = require('./master');
 var KKuTu = require('./kkutu');
+var Crypto = require("../sub/crypto");
 var Lizard = require('../sub/lizard');
 var MainDB = require('../Web/db');
 var JLog = require('../sub/jjlog');
@@ -46,7 +47,7 @@ JLog.info(`<< KKuTu Server:${Server.options.port} >>`);
 
 process.on('uncaughtException', function(err){
 	var text = `:${process.env['KKUTU_PORT']} [${new Date().toLocaleString()}] ERROR: ${err.toString()}\n${err.stack}`;
-
+	
 	for(var i in DIC){
 		DIC[i].send('dying');
 	}
@@ -91,11 +92,23 @@ MainDB.ready = function(){
 	KKuTu.init(MainDB, DIC, ROOM, GUEST_PERMISSION);
 };
 Server.on('connection', function(socket){
-	var chunk = socket.upgradeReq.url.slice(1).split('&');
-	var key = chunk[0];
+	var chunk = socket.upgradeReq.url.slice(1).split('&')
+	var key;
+	// 토큰 복호화
+	try{
+		key = Crypto.decrypt(chunk[0], GLOBAL.CRYPTO_KEY);
+	}catch (exception){
+		key = ".";
+	}
+	// 토큰 값 검사
+	var pattern = /^[0-9a-zA-Z_-]{32}$/;
+	if(!pattern.test(key)){
+		socket.close();
+		return;
+	}
 	var reserve = RESERVED[key] || {}, room;
 	var $c;
-
+	
 	socket.on('error', function(err){
 		JLog.warn("Error on #" + key + " on ws: " + err.toString());
 	});
@@ -120,7 +133,7 @@ Server.on('connection', function(socket){
 	MainDB.session.findOne([ '_id', key ]).limit([ 'profile', true ]).on(function($body){
 		$c = new KKuTu.Client(socket, $body ? $body.profile : null, key);
 		$c.admin = GLOBAL.ADMIN.indexOf($c.id) != -1;
-
+		
 		if(DIC[$c.id]){
 			DIC[$c.id].send('error', { code: 408 });
 			DIC[$c.id].socket.close();
@@ -134,14 +147,14 @@ Server.on('connection', function(socket){
 			if(ref.result == 200){
 				DIC[$c.id] = $c;
 				DNAME[($c.profile.title || $c.profile.name).replace(/\s/g, "")] = $c.id;
-
+				
 				$c.enter(room, reserve.spec, reserve.pass);
 				if($c.place == room.id){
 					$c.publish('connRoom', { user: $c.getData() });
 				}else{ // 입장 실패
 					$c.socket.close();
 				}
-				JLog.info(`Chan @${CHAN} New #${$c.id}`);
+				JLog.info(`Chan @${CHAN} New #${$c.id}(${$c.socket._socket.remoteAddress})`);
 			}else{
 				$c.send('error', {
 					code: ref.result, message: ref.black
@@ -159,14 +172,14 @@ KKuTu.onClientMessage = function($c, msg){
 	var stable = true;
 	var temp;
 	var now = (new Date()).getTime();
-
+	
 	if(!msg) return;
-
+	
 	switch(msg.type){
 		case 'yell':
 			if(!msg.value) return;
 			if(!$c.admin) return;
-
+			
 			$c.publish('yell', { value: msg.value });
 			break;
 		case 'refresh':
@@ -217,18 +230,18 @@ KKuTu.onClientMessage = function($c, msg){
 			if(!msg.round) stable = false;
 			if(!msg.time) stable = false;
 			if(!msg.opts) stable = false;
-
+			
 			msg.code = false;
 			msg.limit = Number(msg.limit);
 			msg.mode = Number(msg.mode);
 			msg.round = Number(msg.round);
 			msg.time = Number(msg.time);
-
+			
 			if(isNaN(msg.limit)) stable = false;
 			if(isNaN(msg.mode)) stable = false;
 			if(isNaN(msg.round)) stable = false;
 			if(isNaN(msg.time)) stable = false;
-
+			
 			if(stable){
 				if(msg.title.length > 20) stable = false;
 				if(msg.password.length > 20) stable = false;
@@ -253,13 +266,13 @@ KKuTu.onClientMessage = function($c, msg){
 			break;
 		case 'leave':
 			if(!$c.place) return;
-
+			
 			$c.leave();
 			break;
 		case 'ready':
 			if(!$c.place) return;
 			if(!GUEST_PERMISSION.ready) if($c.guest) return;
-
+			
 			$c.toggle();
 			break;
 		case 'start':
@@ -267,7 +280,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if(!ROOM[$c.place]) return;
 			if(ROOM[$c.place].gaming) return;
 			if(!GUEST_PERMISSION.start) if($c.guest) return;
-
+			
 			$c.start();
 			break;
 		case 'practice':
@@ -278,7 +291,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if(ROOM[$c.place].rule.ai){
 				if(msg.level < 0 || msg.level >= 5) return;
 			}else if(msg.level != -1) return;
-
+			
 			$c.practice(msg.level);
 			break;
 		case 'invite':
@@ -305,7 +318,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if(!msg.mode) return;
 			if(!ROOM[$c.place]) return;
 			if(ENABLE_FORM.indexOf(msg.mode) == -1) return;
-
+			
 			$c.setForm(msg.mode);
 			break;
 		case 'team':
@@ -314,7 +327,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if($c.ready) return;
 			if(isNaN(temp = Number(msg.value))) return;
 			if(temp < 0 || temp > 4) return;
-
+			
 			$c.setTeam(Math.round(temp));
 			break;
 		case 'kick':
@@ -325,7 +338,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if(ROOM[$c.place].master != $c.id) return;
 			if(ROOM[$c.place].kickVote) return;
 			if(!GUEST_PERMISSION.kick) if($c.guest) return;
-
+			
 			if(msg.robot) $c.kick(null, msg.target);
 			else $c.kick(msg.target);
 			break;
@@ -336,7 +349,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if($c.id == temp.master) return;
 			if(temp.kickVote.list.indexOf($c.id) != -1) return;
 			if(!GUEST_PERMISSION.kickVote) if($c.guest) return;
-
+			
 			$c.kickVote($c, msg.agree);
 			break;
 		case 'handover':
@@ -345,7 +358,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if(temp.gaming) return;
 			if($c.place != DIC[msg.target].place) return;
 			if(temp.master != $c.id) return;
-
+			
 			temp.master = msg.target;
 			temp.export();
 			break;
@@ -355,7 +368,7 @@ KKuTu.onClientMessage = function($c, msg){
 				$c.send('error', { code: 401 });
 				return;
 			}
-
+			
 			msg.value = msg.value.substr(0, 200);
 			msg.value = msg.value.replace(/[^a-z가-힣]/g, "");
 			if(msg.value.length < 2) return;
@@ -369,7 +382,7 @@ KKuTu.onClientMessage = function($c, msg){
 			if(msg.level < 0 || msg.level >= 5) return;
 			if(isNaN(msg.team = Number(msg.team))) return;
 			if(msg.team < 0 || msg.team > 4) return;
-
+			
 			ROOM[$c.place].setAI(msg.target, Math.round(msg.level), Math.round(msg.team));
 			break;
 		default:

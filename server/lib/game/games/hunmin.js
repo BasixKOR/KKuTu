@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,7 +35,7 @@ exports.init = function(_DB, _DIC){
 exports.getTitle = function(){
 	var R = new Lizard.Tail();
 	var my = this;
-
+	
 	my.game.done = [];
 	setTimeout(function(){
 		R.go("①②③④⑤⑥⑦⑧⑨⑩");
@@ -44,7 +44,7 @@ exports.getTitle = function(){
 };
 exports.roundReady = function(){
 	var my = this;
-
+	
 	clearTimeout(my.game.turnTimer);
 	my.game.round++;
 	my.game.roundTime = my.time * 1000;
@@ -67,7 +67,7 @@ exports.turnStart = function(force){
 	var my = this;
 	var speed;
 	var si;
-
+	
 	if(!my.game.chain) return;
 	my.game.roundTime = Math.min(my.game.roundTime, Math.max(10000, 150000 - my.game.chain.length * 1500));
 	speed = my.getTurnSpeed(my.game.roundTime);
@@ -93,13 +93,13 @@ exports.turnEnd = function(){
 	var my = this;
 	var target = DIC[my.game.seq[my.game.turn]] || my.game.seq[my.game.turn];
 	var score;
-
+	
 	if(my.game.loading){
 		my.game.turnTimer = setTimeout(my.turnEnd, 100);
 		return;
 	}
 	if(!my.game.theme) return;
-
+	
 	my.game.late = true;
 	if(target) if(target.game){
 		score = Const.getPenalty(my.game.chain, target.game.score);
@@ -121,7 +121,7 @@ exports.submit = function(client, text, data){
 	var my = this;
 	var tv = (new Date()).getTime();
 	var mgt = my.game.seq[my.game.turn];
-
+	
 	if(!mgt) return;
 	if(!mgt.robot) if(mgt != client.id) return;
 	if(!my.game.theme) return;
@@ -132,7 +132,7 @@ exports.submit = function(client, text, data){
 				function preApproved(){
 					if(my.game.late) return;
 					if(!my.game.chain) return;
-
+					
 					my.game.loading = false;
 					my.game.late = true;
 					clearTimeout(my.game.turnTimer);
@@ -184,7 +184,7 @@ exports.getScore = function(text, delay, ignoreMission){
 	var tr = 1 - delay / my.game.turnTime;
 	var score = Const.getPreScore(text, my.game.chain, tr);
 	var arr;
-
+	
 	if(!ignoreMission) if(arr = text.match(new RegExp(my.game.mission, "g"))){
 		score += score * 0.5 * arr.length;
 		my.game.mission = true;
@@ -196,7 +196,7 @@ exports.readyRobot = function(robot){
 	var level = robot.level;
 	var delay = ROBOT_START_DELAY[level];
 	var w, text;
-
+	
 	getAuto.call(my, my.game.theme, 2).then(function(list){
 		if(list.length){
 			list.sort(function(a, b){ return b.hit - a.hit; });
@@ -228,22 +228,22 @@ function isChainable(text, theme){
 }
 function toRegex(theme){
 	var arg = theme.split('').map(toRegexText).join('');
-
+	
 	return new RegExp(`^(${arg})$`);
 }
 function toRegexText(item){
 	var c = item.charCodeAt();
 	var a = 44032 + 588 * (c - 4352), b = a + 587;
-
+	
 	return `[\\u${a.toString(16)}-\\u${b.toString(16)}]`;
 }
 function getMission(theme){
 	var flag;
-
+	
 	if(!theme) return;
 	if(Math.random() < 0.5) flag = 0;
 	else flag = 1;
-
+	
 	return String.fromCharCode(44032 + 588 * (theme.charCodeAt(flag) - 4352));
 }
 function getAuto(theme, type){
@@ -255,12 +255,12 @@ function getAuto(theme, type){
 	var my = this;
 	var R = new Lizard.Tail();
 	var bool = type == 1;
-
+	
 	var aqs = [[ '_id', toRegex(theme) ]];
 	var aft;
 	var raiser;
 	var lst = false;
-
+	
 	if(!my.opts.injeong) aqs.push([ 'flag', { '$nand': Const.KOR_FLAG.INJEONG } ]);
 	if(my.opts.loanword) aqs.push([ 'flag', { '$nand': Const.KOR_FLAG.LOANWORD } ]);
 	if(my.opts.strict) aqs.push([ 'type', Const.KOR_STRICT ], [ 'flag', { $lte: 3 } ]);
@@ -286,13 +286,13 @@ function getAuto(theme, type){
 			break;
 	}
 	raiser.on(aft);
-
+	
 	return R;
 }
 function getTheme(len, ex){
 	var res = "";
 	var c, d;
-
+	
 	while(len > 0){
 		c = String.fromCharCode(HUNMIN_LIST[Math.floor(Math.random() * HUNMIN_LIST.length)]);
 		if(ex.includes(d = res + c)) continue;

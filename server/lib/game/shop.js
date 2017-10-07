@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -29,16 +29,16 @@ DB.ready = function(){
 		type: process.argv[2],
 		url: process.argv[3]
 	};
-
+	
 	File.readFile(data.url, function(err, _file){
 		if(err){
 			JLog.error("URL not found: " + data.url);
 			process.exit();
 		}else{
 			var i, dv = _file.toString();
-
+			
 			dv = JSON.parse(dv);
-
+			
 			data.list = dv.list;
 			run(data);
 		}
@@ -47,7 +47,7 @@ DB.ready = function(){
 };
 function run(data){
 	var i, o;
-
+	
 	switch(data.type){
 		case "A":
 			/* 추가/수정
@@ -62,7 +62,7 @@ function run(data){
 			*/
 			for(i in data.list){
 				o = data.list[i];
-
+				
 				JLog.log(i);
 				DB.kkutu_shop.upsert([ '_id', Number(o.id) ]).set(
 					[ 'group', o.group ],

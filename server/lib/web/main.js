@@ -1,53 +1,41 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- * Copyright (C) 2017 PkPAI (admin@pkpai.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-var WS		   = require("ws");
+var WS		 = require("ws");
 var Express	 = require("express");
 var Exession = require("express-session");
 var Redission= require("connect-redis")(Exession);
-var Redis	   = require("redis");
+var Redis	 = require("redis");
 var Parser	 = require("body-parser");
-var DDDoS	   = require("dddos");
+var DDDoS	 = require("dddos");
 var Server	 = Express();
-var DB		   = require("./db");
-var JAuth	   = require("../sub/jauth");
-var JLog	   = require("../sub/jjlog");
+var DB		 = require("./db");
+var Crypto	 = require("../sub/crypto");
+var JAuth	 = require("../sub/jauth");
+var JLog	 = require("../sub/jjlog");
 var WebInit	 = require("../sub/webinit");
 var GLOBAL	 = require("../sub/global.json");
-var Const	   = require("../const");
+var Const	 = require("../const");
 
 var Language = {
-	'en_US': require("./lang/en_US.json"),
-	'ko_KR': require("./lang/ko_KR.json")
+	'ko_KR': require("./lang/ko_KR.json"),
+	'en_US': require("./lang/en_US.json")
 };
-
-/* 선택적 기능:
-   TLS 보안 연결을 사용하려면 주석을 해제하십시오.
-var https = require("https");
-var fs    = require("fs");
-var options = {
-  ca: fs.readFileSync('../ca-bundle.pem'),
-  key: fs.readFileSync('../kkutu.pkpai.kr.key.pem'),
-  cert: fs.readFileSync('../kkutu.pkpai.kr.crt.pem')
-};
-*/
-
 var ROUTES = [
 	"major", "consume", "admin"
 ];
@@ -60,28 +48,22 @@ WebInit.MOBILE_AVAILABLE = [
 
 require("../sub/checkpub");
 
-JLog.info("Start the web server.");
+JLog.info("<< KKuTu Web >>");
 Server.set('views', __dirname + "/views");
 Server.set('view engine', "pug");
 Server.use(Express.static(__dirname + "/public"));
 Server.use(Parser.urlencoded({ extended: true }));
 Server.use(Exession({
-
-/* 선택적 기능:
-	 레디스가 설치되었다면 주석을 해제하십시오.
-
 	store: new Redission({
 		client: Redis.createClient(),
 		ttl: 3600 * 12
 	}),
-	*/
 	secret: 'kkutu',
 	resave: false,
 	saveUninitialized: true
 }));
+/* use this if you want
 
-/* 선택적 기능:
-   분산 서비스 거부 공격 방지 기능을 사용하려면 주석을 해제하십시오.
 DDDoS = new DDDoS({
 	maxWeight: 6,
 	checkInterval: 10000,
@@ -97,21 +79,13 @@ DDDoS = new DDDoS({
 DDDoS.rules[0].logFunction = DDDoS.rules[1].logFunction = function(ip, path){
 	JLog.warn(`DoS from IP ${ip} on ${path}`);
 };
-Server.use(DDDoS.express());
-*/
-
-/* 선택적 기능:
-	 TLS 보안 연결 접속을 사용하려면 주석을 해제하십시오.
-https.createServer(options, Server).listen(443, function(){
-  console.log("Https server listening on port " + 443);
-});
-*/
+Server.use(DDDoS.express());*/
 
 WebInit.init(Server, true);
 DB.ready = function(){
 	setInterval(function(){
 		var q = [ 'createdAt', { $lte: Date.now() - 3600000 * 12 } ];
-
+		
 		DB.session.remove(q).on();
 	}, 600000);
 	setInterval(function(){
@@ -121,14 +95,14 @@ DB.ready = function(){
 		});
 	}, 4000);
 	JLog.success("DB is ready.");
-
+	
 	DB.kkutu_shop_desc.find().on(function($docs){
 		var i, j;
-
+		
 		for(i in Language) flush(i);
 		function flush(lang){
 			var db;
-
+			
 			Language[lang].SHOP = db = {};
 			for(j in $docs){
 				db[$docs[j]._id] = [ $docs[j][`name_${lang}`], $docs[j][`desc_${lang}`] ];
@@ -139,19 +113,19 @@ DB.ready = function(){
 };
 Const.MAIN_PORTS.forEach(function(v, i){
 	var KEY = process.env['WS_KEY'];
-
+	
 	gameServers[i] = new GameClient(KEY, `ws://127.0.0.2:${v}/${KEY}`);
 });
 function GameClient(id, url){
 	var my = this;
-
+	
 	my.id = id;
 	my.socket = new WS(url, { perMessageDeflate: false });
-
+	
 	my.send = function(type, data){
 		if(!data) data = {};
 		data.type = type;
-
+		
 		my.socket.send(JSON.stringify(data));
 	};
 	my.socket.on('open', function(){
@@ -168,9 +142,9 @@ function GameClient(id, url){
 	my.socket.on('message', function(data){
 		var _data = data;
 		var i;
-
+		
 		data = JSON.parse(data);
-
+		
 		switch(data.type){
 			case "seek":
 				my.seek = data.value;
@@ -189,19 +163,25 @@ ROUTES.forEach(function(v){
 });
 Server.get("/", function(req, res){
 	var server = req.query.server;
-
-	if(req.query.code){
+	
+	if(req.query.authType == "naver" && req.query.code){
 		req.session.authType = "naver";
 		req.session.token = req.query.code;
 		res.redirect("/register");
-	}else if(req.query.token){
+	}else if(req.query.authType == "facebook" && req.query.code){
 		req.session.authType = "facebook";
-		req.session.token = req.query.token;
+		req.session.token = req.query.code;
+		res.redirect("/register");
+	}else if(req.query.authType == "google" && req.query.code){
+		req.session.authType = "google";
+		req.session.token = req.query.code;
 		res.redirect("/register");
 	}else{
 		DB.session.findOne([ '_id', req.session.id ]).on(function($ses){
+			// var sid = (($ses || {}).profile || {}).sid || "NULL";
 			if(global.isPublic){
 				onFinish($ses);
+				// DB.jjo_session.findOne([ '_id', sid ]).limit([ 'profile', true ]).on(onFinish);
 			}else{
 				if($ses) $ses.profile.sid = $ses._id;
 				onFinish($ses);
@@ -210,7 +190,7 @@ Server.get("/", function(req, res){
 	}
 	function onFinish($doc){
 		var id = req.session.id;
-
+		
 		if($doc){
 			req.session.profile = $doc.profile;
 			id = $doc.profile.sid;
@@ -220,6 +200,7 @@ Server.get("/", function(req, res){
 		page(req, res, Const.MAIN_PORTS[server] ? "kkutu" : "portal", {
 			'_page': "kkutu",
 			'_id': id,
+			'_crypted': Crypto.encrypt(id, GLOBAL.CRYPTO_KEY),//토큰 암호화
 			'PORT': Const.MAIN_PORTS[server],
 			'HOST': req.hostname,
 			'TEST': req.query.test,
@@ -234,17 +215,13 @@ Server.get("/", function(req, res){
 			'EN_INJEONG': Const.EN_INJEONG,
 			'KO_THEME': Const.KO_THEME,
 			'EN_THEME': Const.EN_THEME,
-			'IJP_EXCEPT': Const.IJP_EXCEPT,
-			'ogImage': "https://cdn.nyange.xyz/meta/logo.png",
-			'ogURL': "http://kkutu.pkpai.kr",
-			'ogTitle': "호박파이 끄투",
-			'ogDescription': "호박파이 끄투에서 끝말잇기, 앞말잇기 게임을!"
+			'IJP_EXCEPT': Const.IJP_EXCEPT
 		});
 	}
 });
 Server.get("/servers", function(req, res){
 	var list = [];
-
+	
 	gameServers.forEach(function(v, i){
 		list[i] = v.seek;
 	});
@@ -284,35 +261,32 @@ Server.get("/logout", function(req, res){
 });
 Server.get("/register", function(req, res){
 	if(!req.session.token) return res.sendStatus(400);
-
-	JAuth.login(req.session.authType, req.session.token, req.session.id, req.session.token2).then(function($profile){
+	
+	JAuth.login(req.session.authType, req.session.token, req.session.id).then(function($profile){
 		var now = Date.now();
-
+		
 		if($profile.error) return res.sendStatus($profile.error);
 		if(!$profile.id) return res.sendStatus(401);
-
+		
 		$profile.sid = req.session.id;
 		req.session.admin = GLOBAL.ADMIN.includes($profile.id);
-		DB.session.upsert([ '_id', req.session.id ]).set({
-			'profile': $profile,
-			'createdAt': now
-		}).on();
 		DB.users.findOne([ '_id', $profile.id ]).on(function($body){
-			req.session.profile = $profile;
-			res.redirect("/");
+			if($body && $body.nickname){
+				$profile.title = $body.nickname;
+			}
 			DB.users.update([ '_id', $profile.id ]).set([ 'lastLogin', now ]).on();
+			DB.session.upsert([ '_id', req.session.id ]).set({
+				'profile': $profile,
+				'createdAt': now
+			}).on(function($ses){
+				res.redirect("/");
+			});
 		});
 	});
 });
-Server.post("/login/google", function(req, res){
-	req.session.authType = "google";
-	req.session.token = req.body.it;
-	req.session.token2 = req.body.at;
-	res.sendStatus(200);
-});
 Server.post("/session", function(req, res){
 	var o;
-
+	
 	if(req.session.profile) o = {
 		authType: req.session.authType,
 		createdAt: req.session.createdAt,
@@ -325,9 +299,6 @@ Server.post("/session", function(req, res){
 	};
 	else o = { error: 404 };
 	res.json(o);
-});
-Server.post("/session/set", function(req, res){
-	res.sendStatus(200);
 });
 Server.get("/legal/:page", function(req, res){
 	page(req, res, "legal/"+req.params.page);

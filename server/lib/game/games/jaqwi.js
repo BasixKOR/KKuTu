@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -32,7 +32,7 @@ exports.init = function(_DB, _DIC){
 exports.getTitle = function(){
 	var R = new Lizard.Tail();
 	var my = this;
-
+	
 	my.game.done = [];
 	setTimeout(function(){
 		R.go("①②③④⑤⑥⑦⑧⑨⑩");
@@ -42,7 +42,7 @@ exports.getTitle = function(){
 exports.roundReady = function(){
 	var my = this;
 	var ijl = my.opts.injpick.length;
-
+	
 	clearTimeout(my.game.qTimer);
 	clearTimeout(my.game.hintTimer);
 	clearTimeout(my.game.hintTimer2);
@@ -55,12 +55,12 @@ exports.roundReady = function(){
 		my.game.theme = my.opts.injpick[Math.floor(Math.random() * ijl)];
 		getAnswer.call(my, my.game.theme).then(function($ans){
 			if(!my.game.done) return;
-
+			
 			// $ans가 null이면 골치아프다...
 			my.game.late = false;
 			my.game.answer = $ans || {};
 			my.game.done.push($ans._id);
-			$ans.mean = ($ans.mean.length > 20) ? $ans.mean : getConsonants($ans._id, Math.round($ans._id.length / 2));
+			$ans.mean = ($ans.mean.length > 5) ? $ans.mean : getConsonants($ans._id, Math.round($ans._id.length / 2));
 			my.game.hint = getHint($ans);
 			my.byMaster('roundReady', {
 				round: my.game.round,
@@ -75,9 +75,9 @@ exports.roundReady = function(){
 exports.turnStart = function(){
 	var my = this;
 	var i;
-
+	
 	if(!my.game.answer) return;
-
+	
 	my.game.conso = getConsonants(my.game.answer._id, 1);
 	my.game.roundAt = (new Date()).getTime();
 	my.game.meaned = 0;
@@ -89,14 +89,14 @@ exports.turnStart = function(){
 		char: my.game.conso,
 		roundTime: my.game.roundTime
 	}, true);
-
+	
 	for(i in my.game.robots){
 		my.readyRobot(my.game.robots[i]);
 	}
 };
 function turnHint(){
 	var my = this;
-
+	
 	my.byMaster('turnHint', {
 		hint: my.game.hint[my.game.meaned++]
 	}, true);
@@ -119,7 +119,7 @@ exports.submit = function(client, text){
 	var now = (new Date()).getTime();
 	var play = (my.game.seq ? my.game.seq.includes(client.id) : false) || client.robot;
 	var gu = my.game.giveup ? my.game.giveup.includes(client.id) : true;
-
+	
 	if(!my.game.winner) return;
 	if(my.game.winner.indexOf(client.id) == -1
 		&& text == $ans._id
@@ -182,7 +182,7 @@ exports.readyRobot = function(robot){
 	var level = robot.level;
 	var delay, text;
 	var i;
-
+	
 	if(!my.game.answer) return;
 	clearTimeout(robot._timer);
 	robot._delay = 99999999;
@@ -201,7 +201,7 @@ function getConsonants(word, lucky){
 	var i, len = word.length;
 	var c;
 	var rv = [];
-
+	
 	lucky = lucky || 0;
 	while(lucky > 0){
 		c = Math.floor(Math.random() * len);
@@ -211,7 +211,7 @@ function getConsonants(word, lucky){
 	}
 	for(i=0; i<len; i++){
 		c = word.charCodeAt(i) - 44032;
-
+		
 		if(c < 0 || rv.includes(i)){
 			R += word.charAt(i);
 			continue;
@@ -224,20 +224,20 @@ function getHint($ans){
 	var R = [];
 	var h1 = $ans.mean.replace(new RegExp($ans._id, "g"), "★");
 	var h2;
-
+	
 	R.push(h1);
 	do{
 		h2 = getConsonants($ans._id, Math.ceil($ans._id.length / 2));
 	}while(h1 == h2);
 	R.push(h2);
-
+	
 	return R;
 }
 function getAnswer(theme, nomean){
 	var my = this;
 	var R = new Lizard.Tail();
 	var args = [ [ '_id', { $nin: my.game.done } ] ];
-
+	
 	args.push([ 'theme', new RegExp("(,|^)(" + theme + ")(,|$)") ]);
 	args.push([ 'type', Const.KOR_GROUP ]);
 	args.push([ 'flag', { $lte: 7 } ]);
@@ -245,11 +245,11 @@ function getAnswer(theme, nomean){
 		if(!$res) return R.go(null);
 		var pick;
 		var len = $res.length;
-
+		
 		if(!len) return R.go(null);
 		do{
 			pick = Math.floor(Math.random() * len);
-			if($res[pick]._id.length >= 2) if($res[pick].type == "INJEONG" || $res[pick].mean.length >= 0){
+			if($res[pick]._id.length >= 2) {
 				return R.go($res[pick]);
 			}
 			$res.splice(pick, 1);

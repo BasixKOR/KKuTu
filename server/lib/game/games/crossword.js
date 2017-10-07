@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -34,7 +34,7 @@ exports.getTitle = function(){
 	var my = this;
 	var means = [];
 	var mdb = [];
-
+	
 	my.game.started = false;
 	DB.kkutu_cw[my.rule.lang].find().on(function($box){
 		var answers = {};
@@ -43,7 +43,7 @@ exports.getTitle = function(){
 		var left = my.round;
 		var pick, pi, i, j;
 		var mParser = [];
-
+		
 		while(left){
 			pick = $box[pi = Math.floor(Math.random() * $box.length)];
 			if(!pick) return;
@@ -76,12 +76,12 @@ exports.getTitle = function(){
 		var R = new Lizard.Tail();
 		var word = bItem[4];
 		var x = Number(bItem[0]), y = Number(bItem[1]);
-
+		
 		DB.kkutu[my.rule.lang].findOne([ '_id', word ]).on(function($doc){
 			if(!$doc) return R.go(null);
 			var rk = `${x},${y}`;
 			var i, o;
-
+			
 			means[round][`${rk},${bItem[2]}`] = o = {
 				count: 0,
 				x: x, y: y,
@@ -104,7 +104,7 @@ exports.getTitle = function(){
 };
 exports.roundReady = function(){
 	var my = this;
-
+	
 	if(!my.game.started){
 		my.game.started = true;
 		my.game.roundTime = my.time * 1000;
@@ -118,7 +118,7 @@ exports.roundReady = function(){
 };
 exports.turnStart = function(){
 	var my = this;
-
+	
 	my.game.late = false;
 	my.game.roundAt = (new Date()).getTime();
 	my.game.qTimer = setTimeout(my.turnEnd, my.game.roundTime);
@@ -126,14 +126,14 @@ exports.turnStart = function(){
 		boards: my.game.boards,
 		means: my.game.means
 	}, true);
-
+	
 	/*for(i in my.game.robots){
 		my.readyRobot(my.game.robots[i]);
 	}*/
 };
 function turnHint(){
 	var my = this;
-
+	
 	my.byMaster('turnHint', {
 		hint: my.game.hint[my.game.meaned++]
 	}, true);
@@ -141,7 +141,7 @@ function turnHint(){
 exports.turnEnd = function(){
 	var my = this;
 	var i;
-
+	
 	my.game.late = true;
 	my.byMaster('turnEnd', {});
 	my.game._rrt = setTimeout(my.roundReady, 2500);
@@ -151,7 +151,7 @@ exports.submit = function(client, text, data){
 	var obj, score, mbjs, mbj, jx, jy, v;
 	var play = (my.game.seq ? my.game.seq.includes(client.id) : false) || client.robot;
 	var i, j, key;
-
+	
 	if(!my.game.boards) return;
 	if(!my.game.answers) return;
 	if(!my.game.mdb) return;
@@ -162,7 +162,7 @@ exports.submit = function(client, text, data){
 		if(!mbjs) return;
 		if(obj && obj == text){
 			score = text.length * 10;
-
+			
 			jx = Number(data[1]), jy = Number(data[2]);
 			my.game.prisoners[key] = text;
 			my.game.answers[key] = false;
@@ -208,7 +208,7 @@ exports.getScore = function(text, delay){
 	var delay, text;
 	var board, data, obj;
 	var i;
-
+	
 	if(my.game.late) return;
 	clearTimeout(robot._timerSeek);
 	clearTimeout(robot._timerCatch);

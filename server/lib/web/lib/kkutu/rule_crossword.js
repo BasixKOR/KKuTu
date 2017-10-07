@@ -1,25 +1,24 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- * Copyright (C) 2017 PkPAI (admin@pkpai.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 $lib.Crossword.roundReady = function(data, spec){
 	var turn = data.seq ? data.seq.indexOf($data.id) : -1;
-
+	
 	clearBoard();
 	$(".jjoriping,.rounds,.game-body").addClass("cw");
 	$data._roundTime = $data.room.time * 1000;
@@ -36,7 +35,7 @@ $lib.Crossword.turnEnd = function(id, data){
 	var $uc = $("#game-user-" + id);
 	var $cr;
 	var key;
-
+	
 	if(data.score){
 		key = data.pos.join(',');
 		if(id == $data.id){
@@ -69,7 +68,7 @@ $lib.Crossword.drawDisplay = function(){
 	var $bar;
 	var i, j, x, y, vert, len, word, key;
 	var $w = {};
-
+	
 	for(i in board){
 		x = Number(board[i][0]);
 		y = Number(board[i][1]);
@@ -89,7 +88,7 @@ $lib.Crossword.drawDisplay = function(){
 		else $bar.on('click', $lib.Crossword.onBar).on('mouseleave', $lib.Crossword.onSwap);
 		for(j=0; j<len; j++){
 			key = x + "-" + y;
-
+			
 			if(word) $w[key] = word.charAt(j);
 			$bar.append($("<div>").addClass("cw-cell")
 				.attr('id', "cwc-" + key)
@@ -104,7 +103,7 @@ $lib.Crossword.onSwap = function(e){
 };
 $lib.Crossword.onRound = function(e){
 	var round = $(e.currentTarget).html().charCodeAt(0) - 9311;
-
+	
 	drawRound($data.selectedRound = round);
 	$(".rounds label").on('click', $lib.Crossword.onRound);
 	$lib.Crossword.drawDisplay();
@@ -114,7 +113,7 @@ $lib.Crossword.onBar = function(e){
 	var pos = $bar.attr('id').slice(3).split('-');
 	var data = $data._means[$data.selectedRound - 1][pos.join(',')];
 	var vert = data.dir == "1";
-
+	
 	$stage.game.cwcmd.css('opacity', 1);
 	$data._sel = [ $data.selectedRound - 1, pos[0], pos[1], pos[2] ];
 	$(".cw-q-head").html(L[vert ? 'cwVert' : 'cwHorz'] + data.len + L['cwL']);
@@ -123,7 +122,7 @@ $lib.Crossword.onBar = function(e){
 };
 $lib.Crossword.turnStart = function(data, spec){
 	var i, j;
-
+	
 	$data._bdb = {};
 	$data._boards = data.boards;
 	$data._means = data.means;

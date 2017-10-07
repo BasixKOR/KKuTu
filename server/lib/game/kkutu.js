@@ -1,17 +1,17 @@
-/*
+/**
  * Rule the words! KKuTu Online
- * Copyright (C) 2017 JJoriping (op@jjo.kr)
- *
+ * Copyright (C) 2017 JJoriping(op@jjo.kr)
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@ var Cluster = require("cluster");
 var Const = require('../const');
 var Lizard = require('../sub/lizard');
 var JLog = require('../sub/jjlog');
-// 망할 셧다운제 var Ajae = require("../sub/ajae");
+var Ajae = require("../sub/ajae");
 var DB;
 var SHOP;
 var DIC;
@@ -40,17 +40,17 @@ const PER_OKG = 600000;
 exports.NIGHT = false;
 exports.init = function(_DB, _DIC, _ROOM, _GUEST_PERMISSION, _CHAN){
 	var i, k;
-
+	
 	DB = _DB;
 	DIC = _DIC;
 	ROOM = _ROOM;
 	GUEST_PERMISSION = _GUEST_PERMISSION;
 	CHAN = _CHAN;
 	_rid = 100;
-	// 망할 셧다운제 if(Cluster.isMaster) setInterval(exports.processAjae, 60000);
+	if(Cluster.isMaster) setInterval(exports.processAjae, 60000);
 	DB.kkutu_shop.find().on(function($shop){
 		SHOP = {};
-
+		
 		$shop.forEach(function(item){
 			SHOP[item._id] = item;
 		});
@@ -62,37 +62,35 @@ exports.init = function(_DB, _DIC, _ROOM, _GUEST_PERMISSION, _CHAN){
 		Rule[k].init(DB, DIC);
 	}
 };
-/* 망할 셧다운제
 exports.processAjae = function(){
 	var i;
-
+	
 	exports.NIGHT = (new Date()).getHours() < 6;
-	if(exports.NIGHT){
+	/*if(exports.NIGHT){
 		for(i in DIC){
 			if(!DIC[i].isAjae){
 				DIC[i].sendError(440);
 				DIC[i].socket.close();
 			}
 		}
-	}
+	}*/
 };
-*/
 exports.getUserList = function(){
 	var i, res = {};
-
+	
 	for(i in DIC){
 		res[i] = DIC[i].getData();
 	}
-
+	
 	return res;
 };
 exports.getRoomList = function(){
 	var i, res = {};
-
+	
 	for(i in ROOM){
 		res[i] = ROOM[i].getData();
 	}
-
+	
 	return res;
 };
 exports.narrate = function(list, type, data){
@@ -102,7 +100,7 @@ exports.narrate = function(list, type, data){
 };
 exports.publish = function(type, data, _room){
 	var i;
-
+	
 	if(Cluster.isMaster){
 		for(i in DIC){
 			DIC[i].send(type, data);
@@ -116,7 +114,7 @@ exports.publish = function(type, data, _room){
 };
 exports.Robot = function(target, place, level){
 	var my = this;
-
+	
 	my.id = target + place + Math.floor(Math.random() * 1000000000);
 	my.robot = true;
 	my.game = {};
@@ -124,7 +122,7 @@ exports.Robot = function(target, place, level){
 	my.place = place;
 	my.target = target;
 	my.equip = { robot: true };
-
+	
 	my.getData = function(){
 		return {
 			id: my.id,
@@ -150,7 +148,7 @@ exports.Robot = function(target, place, level){
 	my.invokeWordPiece = function(text, coef){};
 	my.publish = function(type, data, noBlock){
 		var i;
-
+		
 		if(my.target == null){
 			for(i in DIC){
 				if(DIC[i].place == place) DIC[i].send(type, data);
@@ -167,9 +165,9 @@ exports.Robot = function(target, place, level){
 };
 exports.Data = function(data){
 	var i, j;
-
+	
 	if(!data) data = {};
-
+	
 	this.score = data.score || 0;
 	this.playTime = data.playTime || 0;
 	this.connectDate = data.connectDate || 0;
@@ -182,19 +180,19 @@ exports.Data = function(data){
 };
 exports.WebServer = function(socket){
 	var my = this;
-
+	
 	my.socket = socket;
-
+	
 	my.send = function(type, data){
 		var i, r = data || {};
-
+		
 		r.type = type;
-
+		
 		if(socket.readyState == 1) socket.send(JSON.stringify(r));
 	};
 	my.onWebServerMessage = function(msg){
 		try{ msg = JSON.parse(msg); }catch(e){ return; }
-
+		
 		switch(msg.type){
 			case 'seek':
 				my.send('seek', { value: Object.keys(DIC).length });
@@ -210,11 +208,10 @@ exports.WebServer = function(socket){
 exports.Client = function(socket, profile, sid){
 	var my = this;
 	var gp, okg;
-
+	
 	if(profile){
 		my.id = profile.id;
 		my.profile = profile;
-		/* 망할 셧다운제
 		if(Cluster.isMaster){
 			my.isAjae = Ajae.checkAjae(profile.birth, profile._age);
 		}else{
@@ -224,14 +221,13 @@ exports.Client = function(socket, profile, sid){
 		my._age = profile._age;
 		delete my.profile.birth;
 		delete my.profile._age;
-		*/
-		delete my.profile.token;
 		delete my.profile.sid;
-
+		delete my.profile.token;
+		
 		if(my.profile.title) my.profile.name = "anonymous";
 	}else{
 		gp = guestProfiles[Math.floor(Math.random() * guestProfiles.length)];
-
+		
 		my.id = sid;
 		my.guest = true;
 		my.isAjae = false;
@@ -246,13 +242,16 @@ exports.Client = function(socket, profile, sid){
 	my.team = 0;
 	my.ready = false;
 	my.game = {};
-
+	
 	my.subPlace = 0;
 	my.error = false;
 	my.blocked = false;
+	my.blockedChat = false;
 	my.spam = 0;
+	my.spamChat = 0;
 	my._pub = new Date();
-
+	my._pubChat = new Date();
+	
 	if(Cluster.isMaster){
 		my.onOKG = function(time){
 			// ?? 이럴 일이 없어야 한다.
@@ -260,7 +259,7 @@ exports.Client = function(socket, profile, sid){
 	}else{
 		my.onOKG = function(time){
 			var d = (new Date()).getDate();
-
+			
 			if(my.guest) return;
 			if(d != my.data.connectDate){
 				my.data.connectDate = d;
@@ -268,7 +267,7 @@ exports.Client = function(socket, profile, sid){
 				my.okgCount = 0;
 			}
 			my.data.playTime += time;
-
+			
 			while(my.data.playTime >= PER_OKG * (my.okgCount + 1)){
 				if(my.okgCount >= MAX_OKG) return;
 				my.okgCount++;
@@ -284,14 +283,13 @@ exports.Client = function(socket, profile, sid){
 	});
 	socket.on('message', function(msg){
 		var data, room = ROOM[my.place];
-
+		
 		JLog.log(`Chan @${channel} Msg #${my.id}: ${msg}`);
 		try{ data = JSON.parse(msg); }catch(e){ data = { error: 400 }; }
 		if(Cluster.isWorker) process.send({ type: "tail-report", id: my.id, chan: channel, place: my.place, msg: data.error ? msg : data });
-
+		
 		exports.onClientMessage(my, data);
 	});
-	/* 망할 셧다운제
 	my.confirmAjae = function(input){
 		if(Ajae.confirmAjae(input, my._birth, my._age)){
 			DB.users.update([ '_id', my.id ]).set([ 'birthday', input.join('-') ]).on(function(){
@@ -303,7 +301,6 @@ exports.Client = function(socket, profile, sid){
 			});
 		}
 	};
-	*/
 	my.getData = function(gaming){
 		var o = {
 			id: my.id,
@@ -329,9 +326,9 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.send = function(type, data){
 		var i, r = data || {};
-
+		
 		r.type = type;
-
+		
 		if(socket.readyState == 1) socket.send(JSON.stringify(r));
 	};
 	my.sendError = function(code, msg){
@@ -339,24 +336,50 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.publish = function(type, data, noBlock){
 		var i;
-		var now = new Date(), st = now - my._pub;
-
-		if(st <= Const.SPAM_ADD_DELAY) my.spam++;
-		else if(st >= Const.SPAM_CLEAR_DELAY) my.spam = 0;
-		if(my.spam >= Const.SPAM_LIMIT){
-			if(!my.blocked) my.numSpam = 0;
-			my.blocked = true;
-		}
-		if(!noBlock){
-			my._pub = now;
-			if(my.blocked){
-				if(st < Const.BLOCKED_LENGTH){
-					if(++my.numSpam >= Const.KICK_BY_SPAM){
-						if(Cluster.isWorker) process.send({ type: "kick", target: my.id });
-						return my.socket.close();
-					}
-					return my.send('blocked');
-				}else my.blocked = false;
+		var now = new Date();
+		var $room = ROOM[my.place];
+		
+		// 채팅 도배 차단
+		if (type == 'chat' && !my.subPlace && (!$room || !$room.gaming || $room.game.seq.indexOf(my.id) == -1)) {
+			var stChat = now - my._pubChat;
+			if(stChat <= Const.CHAT_SPAM_ADD_DELAY) my.spamChat++;
+			else if(stChat >= Const.CHAT_SPAM_CLEAR_DELAY) my.spamChat = 0;
+			if(my.spamChat >= Const.CHAT_SPAM_LIMIT){
+				if(!my.blockedChat) my.numSpamChat = 0;
+				my.blockedChat = true;
+			}
+			if(!noBlock){
+				my._pubChat = now;
+				if(my.blockedChat){
+					if(stChat < Const.CHAT_BLOCKED_LENGTH){
+						if(++my.numSpamChat >= Const.CHAT_KICK_BY_SPAM){
+							if(Cluster.isWorker) process.send({ type: "kick", target: my.id });
+							return my.socket.close();
+						}
+						return my.send('blocked');
+					}else my.blockedChat = false;
+				}
+			}
+		// 패킷 도배 차단
+		} else {
+			var st = now - my._pub;
+			if(st <= Const.SPAM_ADD_DELAY) my.spam++;
+			else if(st >= Const.SPAM_CLEAR_DELAY) my.spam = 0;
+			if(my.spam >= Const.SPAM_LIMIT){
+				if(!my.blocked) my.numSpam = 0;
+				my.blocked = true;
+			}
+			if(!noBlock){
+				my._pub = now;
+				if(my.blocked){
+					if(st < Const.BLOCKED_LENGTH){
+						if(++my.numSpam >= Const.KICK_BY_SPAM){
+							if(Cluster.isWorker) process.send({ type: "kick", target: my.id });
+							return my.socket.close();
+						}
+						return my.send('blocked');
+					}else my.blocked = false;
+				}
 			}
 		}
 		data.profile = my.profile;
@@ -375,7 +398,7 @@ exports.Client = function(socket, profile, sid){
 		var d = now.getDate();
 		var i, expired = [];
 		var gr;
-
+		
 		now = now.getTime() * 0.001;
 		if(d != my.data.connectDate){
 			my.data.connectDate = d;
@@ -389,7 +412,7 @@ exports.Client = function(socket, profile, sid){
 			if(!my.box[i].expire) continue;
 			if(my.box[i].expire < now){
 				gr = SHOP[i].group;
-
+				
 				if(gr.substr(0, 3) == "BDG") gr = "BDG";
 				if(my.equip[gr] == i) delete my.equip[gr];
 				delete my.box[i];
@@ -403,26 +426,25 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.refresh = function(){
 		var R = new Lizard.Tail();
-
+		
 		if(my.guest){
 			my.equip = {};
 			my.data = new exports.Data();
 			my.money = 0;
 			my.friends = {};
-
+			
 			R.go({ result: 200 });
 		}else DB.users.findOne([ '_id', my.id ]).on(function($user){
 			var first = !$user;
 			var black = first ? "" : $user.black;
-
+			
 			if(first) $user = { money: 0 };
 			if(black == "null") black = false;
 			if(black == "chat"){
 				black = false;
 				my.noChat = true;
 			}
-			/* 망할 셧다운제
-			if(Cluster.isMaster && !my.isAjae){ // null일 수는 없다.
+			/*if(Cluster.isMaster && !my.isAjae){ // null일 수는 없다.
 				my.isAjae = Ajae.checkAjae(($user.birthday || "").split('-'));
 				if(my.isAjae === null){
 					if(my._birth) my._checkAjae = setTimeout(function(){
@@ -449,14 +471,14 @@ exports.Client = function(socket, profile, sid){
 			}
 			if(black) R.go({ result: 444, black: black });
 			else if(Cluster.isMaster && $user.server) R.go({ result: 409, black: $user.server });
-			else if(exports.NIGHT && my.isAjae === false) R.go({ result: 440 });
+			//else if(exports.NIGHT && my.isAjae === false) {R.go({ result: 440 });}
 			else R.go({ result: 200 });
 		});
 		return R;
 	};
 	my.flush = function(box, equip, friends){
 		var R = new Lizard.Tail();
-
+		
 		if(my.guest){
 			R.go({ id: my.id, prev: 0 });
 			return R;
@@ -480,7 +502,7 @@ exports.Client = function(socket, profile, sid){
 	my.invokeWordPiece = function(text, coef){
 		if(!my.game.wpc) return;
 		var v;
-
+		
 		if(Math.random() <= 0.04 * coef){
 			v = text.charAt(Math.floor(Math.random() * text.length));
 			if(!v.match(/[a-z가-힣]/)) return;
@@ -489,7 +511,7 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.enter = function(room, spec, pass){
 		var $room, i;
-
+		
 		if(my.place){
 			my.send('roomStuck');
 			JLog.warn(`Enter the room ${room.id} in the place ${my.place} by ${my.id}!`);
@@ -497,7 +519,7 @@ exports.Client = function(socket, profile, sid){
 		}else if(room.id){
 			// 이미 있는 방에 들어가기... 여기서 유효성을 검사한다.
 			$room = ROOM[room.id];
-
+			
 			if(!$room){
 				if(Cluster.isMaster){
 					for(i in CHAN) CHAN[i].send({ type: "room-invalid", room: room });
@@ -513,7 +535,7 @@ exports.Client = function(socket, profile, sid){
 					return my.sendError(401);
 				}
 			}
-			if($room.players.length >= $room.limit + (spec ? Const.MAX_OBSERVER : 0)){
+			if($room.players.length >= $room.limit + (spec && $room.gaming ? Const.MAX_OBSERVER : 0)){
 				return my.sendError(429);
 			}
 			if($room.players.indexOf(my.id) != -1){
@@ -522,7 +544,7 @@ exports.Client = function(socket, profile, sid){
 			if(Cluster.isMaster){
 				my.send('preRoom', { id: $room.id, pw: room.password, channel: $room.channel });
 				CHAN[$room.channel].send({ type: "room-reserve", session: sid, room: room, spec: spec, pass: pass });
-
+				
 				$room = undefined;
 			}else{
 				if(!pass && $room){
@@ -548,12 +570,12 @@ exports.Client = function(socket, profile, sid){
 			*/
 			if(Cluster.isMaster){
 				var av = getFreeChannel();
-
+				
 				room.id = _rid;
 				room._create = true;
 				my.send('preRoom', { id: _rid, channel: av });
 				CHAN[av].send({ type: "room-reserve", create: true, session: sid, room: room });
-
+				
 				do{
 					if(++_rid > 999) _rid = 100;
 				}while(ROOM[_rid]);
@@ -566,7 +588,7 @@ exports.Client = function(socket, profile, sid){
 					my.sendError(409);
 				}
 				$room = new exports.Room(room, getFreeChannel());
-
+				
 				process.send({ type: "room-new", target: my.id, room: $room.getData() });
 				ROOM[$room.id] = $room;
 				spec = false;
@@ -579,7 +601,7 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.leave = function(kickVote){
 		var $room = ROOM[my.place];
-
+		
 		if(my.subPlace){
 			my.pracRoom.go(my);
 			if($room) my.send('room', { target: my.id, room: $room.getData() });
@@ -590,9 +612,9 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.setForm = function(mode){
 		var $room = ROOM[my.place];
-
+		
 		if(!$room) return;
-
+		
 		my.form = mode;
 		my.ready = false;
 		my.publish('user', my.getData());
@@ -605,7 +627,7 @@ exports.Client = function(socket, profile, sid){
 		var $room = ROOM[my.place];
 		var i, $c;
 		var len = $room.players.length;
-
+		
 		if(target == null){ // 로봇 (이 경우 kickVote는 로봇의 식별자)
 			$room.removeAI(kickVote);
 			return;
@@ -624,7 +646,7 @@ exports.Client = function(socket, profile, sid){
 				$c = DIC[$room.players[i]];
 				if(!$c) continue;
 				if($c.id == $room.master) continue;
-
+				
 				$c.kickTimer = setTimeout($c.kickVote, 10000, $c, true);
 			}
 			my.publish('kickVote', $room.kickVote, true);
@@ -633,18 +655,18 @@ exports.Client = function(socket, profile, sid){
 	my.kickVote = function(client, agree){
 		var $room = ROOM[client.place];
 		var $m;
-
+		
 		if(!$room) return;
-
+		
 		$m = DIC[$room.master];
 		if($room.kickVote){
 			$room.kickVote[agree ? 'Y' : 'N']++;
 			if($room.kickVote.list.push(client.id) >= $room.players.length - 2){
 				if($room.gaming) return;
-
+				
 				if($room.kickVote.Y >= $room.kickVote.N) $m.kick($room.kickVote.target, $room.kickVote);
 				else $m.publish('kickDeny', { target: $room.kickVote.target, Y: $room.kickVote.Y, N: $room.kickVote.N }, true);
-
+				
 				$room.kickVote = null;
 			}
 		}
@@ -652,32 +674,32 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.toggle = function(){
 		var $room = ROOM[my.place];
-
+		
 		if(!$room) return;
 		if($room.master == my.id) return;
 		if(my.form != "J") return;
-
+		
 		my.ready = !my.ready;
 		my.publish('user', my.getData());
 	};
 	my.start = function(){
 		var $room = ROOM[my.place];
-
+		
 		if(!$room) return;
 		if($room.master != my.id) return;
 		if($room.players.length < 2) return my.sendError(411);
-
+		
 		$room.ready();
 	};
 	my.practice = function(level){
 		var $room = ROOM[my.place];
 		var ud;
 		var pr;
-
+		
 		if(!$room) return;
 		if(my.subPlace) return;
 		if(my.form != "J") return;
-
+		
 		my.team = 0;
 		my.ready = false;
 		ud = my.getData();
@@ -697,7 +719,7 @@ exports.Client = function(socket, profile, sid){
 	};
 	my.setRoom = function(room){
 		var $room = ROOM[my.place];
-
+		
 		if($room){
 			if(!$room.gaming){
 				if($room.master == my.id){
@@ -715,7 +737,7 @@ exports.Client = function(socket, profile, sid){
 		var $obj;
 		var i, j;
 		var pm = rw.playTime / 60000;
-
+		
 		rw._score = Math.round(rw.score);
 		rw._money = Math.round(rw.money);
 		rw._blog = [];
@@ -736,7 +758,7 @@ exports.Client = function(socket, profile, sid){
 		if(rw.together && my.okgCount > 0){
 			i = 0.05 * my.okgCount;
 			j = 0.05 * my.okgCount;
-
+			
 			rw.score += rw._score * i;
 			rw.money += rw._money * j;
 			rw._blog.push("kgEXP" + i);
@@ -749,13 +771,13 @@ exports.Client = function(socket, profile, sid){
 		if(my.guest) return;
 		if(my.box[k]) my.box[k] += q;
 		else my.box[k] = q;
-
+		
 		my.send('obtain', { key: k, q: q });
 		if(flush) my.flush(true);
 	};
 	my.addFriend = function(id){
 		var fd = DIC[id];
-
+		
 		if(!fd) return;
 		my.friends[id] = fd.profile.title || fd.profile.name;
 		my.flush(false, false, true);
@@ -764,9 +786,9 @@ exports.Client = function(socket, profile, sid){
 	my.removeFriend = function(id){
 		DB.users.findOne([ '_id', id ]).limit([ 'friends', true ]).on(function($doc){
 			if(!$doc) return;
-
+			
 			var f = $doc.friends;
-
+			
 			delete f[my.id];
 			DB.users.update([ '_id', id ]).set([ 'friends', f ]).on();
 		});
@@ -777,7 +799,7 @@ exports.Client = function(socket, profile, sid){
 };
 exports.Room = function(room, channel){
 	var my = this;
-
+	
 	my.id = room.id || _rid;
 	my.channel = channel;
 	my.opts = {};
@@ -800,16 +822,16 @@ exports.Room = function(room, channel){
 	my.players = [];
 	my.kicked = [];
 	my.kickVote = null;
-
+	
 	my.gaming = false;
 	my.game = {};
-
+	
 	my.getData = function(){
 		var i, readies = {};
 		var pls = [];
 		var seq = my.game.seq ? my.game.seq.map(filterRobot) : [];
 		var o;
-
+		
 		for(i in my.players){
 			if(o = DIC[my.players[i]]){
 				readies[my.players[i]] = {
@@ -859,7 +881,7 @@ exports.Room = function(room, channel){
 	};
 	my.setAI = function(target, level, team){
 		var i;
-
+		
 		for(i in my.players){
 			if(!my.players[i]) continue;
 			if(!my.players[i].robot) continue;
@@ -874,7 +896,7 @@ exports.Room = function(room, channel){
 	};
 	my.removeAI = function(target, noEx){
 		var i, j;
-
+		
 		for(i in my.players){
 			if(!my.players[i]) continue;
 			if(!my.players[i].robot) continue;
@@ -892,7 +914,7 @@ exports.Room = function(room, channel){
 	};
 	my.come = function(client){
 		if(!my.practice) client.place = my.id;
-
+		
 		if(my.players.push(client.id) == 1){
 			my.master = client.id;
 		}
@@ -901,7 +923,7 @@ exports.Room = function(room, channel){
 			client.team = 0;
 			client.cameWhenGaming = false;
 			client.form = "J";
-
+			
 			if(!my.practice) process.send({ type: "room-come", target: client.id, id: my.id });
 			my.export(client.id);
 		}
@@ -909,13 +931,13 @@ exports.Room = function(room, channel){
 	my.spectate = function(client, password){
 		if(!my.practice) client.place = my.id;
 		var len = my.players.push(client.id);
-
+		
 		if(Cluster.isWorker){
 			client.ready = false;
 			client.team = 0;
 			client.cameWhenGaming = true;
 			client.form = (len > my.limit) ? "O" : "S";
-
+			
 			process.send({ type: "room-spectate", target: client.id, id: my.id, pw: password });
 			my.export(client.id, false, true);
 		}
@@ -923,7 +945,7 @@ exports.Room = function(room, channel){
 	my.go = function(client, kickVote){
 		var x = my.players.indexOf(client.id);
 		var me;
-
+		
 		if(x == -1){
 			client.place = 0;
 			if(my.players.length < 1) delete ROOM[my.id];
@@ -972,7 +994,7 @@ exports.Room = function(room, channel){
 			clearTimeout(my.game.turnTimer);
 			client.subPlace = 0;
 		}else client.place = 0;
-
+		
 		if(Cluster.isWorker){
 			if(!my.practice){
 				client.socket.close();
@@ -983,7 +1005,7 @@ exports.Room = function(room, channel){
 	};
 	my.set = function(room){
 		var i, k, ijc, ij;
-
+		
 		my.title = room.title;
 		my.password = room.password;
 		my.limit = Math.max(Math.min(8, my.players.length), Math.round(room.limit));
@@ -1011,7 +1033,7 @@ exports.Room = function(room, channel){
 	my.preReady = function(teams){
 		var i, j, t = 0, l = 0;
 		var avTeam = [];
-
+		
 		// 팀 검사
 		if(teams){
 			if(teams[0].length){
@@ -1045,7 +1067,7 @@ exports.Room = function(room, channel){
 		var i, all = true;
 		var len = 0;
 		var teams = [ [], [], [], [], [] ];
-
+		
 		for(i in my.players){
 			if(my.players[i].robot){
 				len++;
@@ -1054,10 +1076,10 @@ exports.Room = function(room, channel){
 			}
 			if(!DIC[my.players[i]]) continue;
 			if(DIC[my.players[i]].form == "S") continue;
-
+			
 			len++;
 			teams[DIC[my.players[i]].team].push(my.players[i]);
-
+			
 			if(my.players[i] == my.master) continue;
 			if(!DIC[my.players[i]].ready){
 				all = false;
@@ -1075,7 +1097,7 @@ exports.Room = function(room, channel){
 	my.start = function(pracLevel){
 		var i, j, o, hum = 0;
 		var now = (new Date()).getTime();
-
+		
 		my.gaming = true;
 		my.game.late = true;
 		my.game.round = 0;
@@ -1102,7 +1124,7 @@ exports.Room = function(room, channel){
 				my.game.seq = [];
 				for(i=0; i<o; i++){
 					var v = my._teams[my._avTeam[i % j]].shift();
-
+					
 					if(!v) continue;
 					my.game.seq[i] = v;
 				}
@@ -1115,7 +1137,7 @@ exports.Room = function(room, channel){
 			o = DIC[my.game.seq[i]] || my.game.seq[i];
 			if(!o) continue;
 			if(!o.game) continue;
-
+			
 			o.playAt = now;
 			o.ready = false;
 			o.game.score = 0;
@@ -1135,7 +1157,7 @@ exports.Room = function(room, channel){
 	};
 	my.roundReady = function(){
 		if(!my.gaming) return;
-
+		
 		return my.route("roundReady");
 	};
 	my.interrupt = function(){
@@ -1154,8 +1176,8 @@ exports.Room = function(room, channel){
 		var suv = [];
 		var teams = [ null, [], [], [], [] ];
 		var sumScore = 0;
-		var now = (new Date()).getTime();
-
+		var now = (new Date()).getTime();	
+		
 		my.interrupt();
 		for(i in my.players){
 			o = DIC[my.players[i]];
@@ -1186,7 +1208,7 @@ exports.Room = function(room, channel){
 		}
 		res.sort(function(a, b){ return b.score - a.score; });
 		rl = res.length;
-
+		
 		for(i in res){
 			o = DIC[res[i].id];
 			if(pv == res[i].score){
@@ -1212,12 +1234,12 @@ exports.Room = function(room, channel){
 				if(res[i].rank == 0) o.data.record[Const.GAME_TYPE[my.mode]][1]++;
 			}
 			users[o.id] = o.getData();
-
+			
 			suv.push(o.flush(true));
 		}
 		Lizard.all(suv).then(function(uds){
 			var o = {};
-
+			
 			suv = [];
 			for(i in uds){
 				o[uds[i].id] = { prev: uds[i].prev };
@@ -1225,10 +1247,10 @@ exports.Room = function(room, channel){
 			}
 			Lizard.all(suv).then(function(ranks){
 				var i, j;
-
+				
 				for(i in ranks){
 					if(!o[ranks[i].target]) continue;
-
+					
 					o[ranks[i].target].list = ranks[i].data;
 				}
 				my.byMaster('roundEnd', { result: res, users: users, ranks: o, data: data }, true);
@@ -1246,7 +1268,7 @@ exports.Room = function(room, channel){
 	my.export = function(target, kickVote, spec){
 		var obj = { room: my.getData() };
 		var i, o;
-
+		
 		if(!my.rule) return;
 		if(target) obj.target = target;
 		if(kickVote) obj.kickVote = kickVote;
@@ -1274,24 +1296,24 @@ exports.Room = function(room, channel){
 	};
 	my.turnStart = function(force){
 		if(!my.gaming) return;
-
+		
 		return my.route("turnStart", force);
 	};
 	my.readyRobot = function(robot){
 		if(!my.gaming) return;
-
+		
 		return my.route("readyRobot", robot);
 	};
 	my.turnRobot = function(robot, text, data){
 		if(!my.gaming) return;
-
+		
 		my.submit(robot, text, data);
 		//return my.route("turnRobot", robot, text);
 	};
 	my.turnNext = function(force){
 		if(!my.gaming) return;
 		if(!my.game.seq) return;
-
+		
 		my.game.turn = (my.game.turn + 1) % my.game.seq.length;
 		my.turnStart(force);
 	};
@@ -1322,19 +1344,19 @@ exports.Room = function(room, channel){
 	};
 	/*my.route = function(func, ...args){
 		var cf;
-
+		
 		if(!(cf = my.checkRoute(func))) return;
 		return Slave.run(my, func, args);
 	};*/
 	my.route = my.routeSync = function(func, ...args){
 		var cf;
-
+		
 		if(!(cf = my.checkRoute(func))) return;
 		return cf.apply(my, args);
 	};
 	my.checkRoute = function(func){
 		var c;
-
+		
 		if(!my.rule) return JLog.warn("Unknown mode: " + my.mode), false;
 		if(!(c = Rule[my.rule.rule])) return JLog.warn("Unknown rule: " + my.rule.rule), false;
 		if(!c[func]) return JLog.warn("Unknown function: " + func), false;
@@ -1344,10 +1366,10 @@ exports.Room = function(room, channel){
 };
 function getFreeChannel(){
 	var i, list = {};
-
+	
 	if(Cluster.isMaster){
 		var mk = 1;
-
+		
 		for(i in CHAN){
 			// if(CHAN[i].isDead()) continue;
 			list[i] = 0;
@@ -1367,7 +1389,7 @@ function getFreeChannel(){
 }
 function getGuestName(sid){
 	var i, len = sid.length, res = 0;
-
+	
 	for(i=0; i<len; i++){
 		res += sid.charCodeAt(i) * (i+1);
 	}
@@ -1375,16 +1397,16 @@ function getGuestName(sid){
 }
 function shuffle(arr){
 	var i, r = [];
-
+	
 	for(i in arr) r.push(arr[i]);
 	r.sort(function(a, b){ return Math.random() - 0.5; });
-
+	
 	return r;
 }
 function getRewards(mode, score, bonus, rank, all, ss){
 	var rw = { score: 0, money: 0 };
 	var sr = score / ss;
-
+	
 	// all은 1~8
 	// rank는 0~7
 	switch(Const.GAME_TYPE[mode]){
@@ -1447,7 +1469,11 @@ function getRewards(mode, score, bonus, rank, all, ss){
 	rw.score += bonus;
 	rw.score = rw.score || 0;
 	rw.money = rw.money || 0;
-
+	
+	// 2배 이벤트
+	//rw.score = rw.score * 2;
+	//rw.money = rw.money * 2;
+	
 	// applyEquipOptions에서 반올림한다.
 	return rw;
 }
