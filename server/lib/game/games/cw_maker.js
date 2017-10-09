@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rule the words! KKuTu Online
  * Copyright (C) 2017 JJoriping(op@jjo.kr)
  * 
@@ -16,8 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-﻿var Prompt = require('prompt');
-var DB = require('../../Web/db');
+var Prompt = require('prompt');
+var DB = require('../../web/db');
 var Const = require('../../const');
 var Lizard = require('../../sub/lizard');
 var LANG = 'ko';

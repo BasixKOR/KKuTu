@@ -27,7 +27,7 @@ var Master = require('./master');
 var KKuTu = require('./kkutu');
 var Crypto = require("../sub/crypto");
 var Lizard = require('../sub/lizard');
-var MainDB = require('../Web/db');
+var MainDB = require('../web/db');
 var JLog = require('../sub/jjlog');
 var GLOBAL = require('../sub/global.json');
 
@@ -154,7 +154,7 @@ Server.on('connection', function(socket){
 				}else{ // 입장 실패
 					$c.socket.close();
 				}
-				JLog.info(`Chan @${CHAN} New #${$c.id}(${$c.socket._socket.remoteAddress})`);
+				JLog.info(`Chan @${CHAN} New #${$c.id}`);
 			}else{
 				$c.send('error', {
 					code: ref.result, message: ref.black

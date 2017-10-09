@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-var DB	 = require("../Web/db");
+var DB	 = require("../web/db");
 var File = require("fs");
 var JLog = require("../sub/jjlog");
 
