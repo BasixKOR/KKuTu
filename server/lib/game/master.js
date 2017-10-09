@@ -1,17 +1,17 @@
 /**
  * Rule the words! KKuTu Online
  * Copyright (C) 2017 JJoriping(op@jjo.kr)
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -61,7 +61,7 @@ const PORT = process.env['KKUTU_PORT'];
 
 process.on('uncaughtException', function(err){
 	var text = `:${PORT} [${new Date().toLocaleString()}] ERROR: ${err.toString()}\n${err.stack}\n`;
-	
+
 	File.appendFile("/jjolol/KKUTU_ERROR.log", text, function(res){
 		JLog.error(`ERROR OCCURRED ON THE MASTER!`);
 		console.log(text);
@@ -69,7 +69,7 @@ process.on('uncaughtException', function(err){
 });
 function processAdmin(id, value){
 	var cmd, temp, i, j;
-	
+
 	value = value.replace(/^(#\w+\s+)?(.+)/, function(v, p1, p2){
 		if(p1) cmd = p1.slice(1).trim();
 		return p2;
@@ -124,7 +124,7 @@ function processAdmin(id, value){
 }
 function checkTailUser(id, place, msg){
 	var temp;
-	
+
 	if(temp = T_USER[id]){
 		if(!DIC[temp]){
 			delete T_USER[id];
@@ -136,18 +136,18 @@ function checkTailUser(id, place, msg){
 function narrateFriends(id, friends, stat){
 	if(!friends) return;
 	var fl = Object.keys(friends);
-	
+
 	if(!fl.length) return;
-	
+
 	MainDB.users.find([ '_id', { $in: fl } ], [ 'server', /^\w+$/ ]).limit([ 'server', true ]).on(function($fon){
 		var i, sf = {}, s;
-		
+
 		for(i in $fon){
 			if(!sf[s = $fon[i].server]) sf[s] = [];
 			sf[s].push($fon[i]._id);
 		}
 		if(DIC[id]) DIC[id].send('friends', { list: sf });
-		
+
 		if(sf[SID]){
 			KKuTu.narrate(sf[SID], 'friend', { id: id, s: SID, stat: stat });
 			delete sf[SID];
@@ -160,7 +160,7 @@ function narrateFriends(id, friends, stat){
 }
 Cluster.on('message', function(worker, msg){
 	var temp;
-	
+
 	switch(msg.type){
 		case "admin":
 			if(DIC[msg.id] && DIC[msg.id].admin) processAdmin(msg.id, msg.value);
@@ -228,7 +228,7 @@ Cluster.on('message', function(worker, msg){
 				if(ROOM[msg.id] && ROOM[msg.id].players){
 					// 이 때 수동으로 지워준다.
 					var x = ROOM[msg.id].players.indexOf(msg.target);
-					
+
 					if(x != -1){
 						ROOM[msg.id].players.splice(x, 1);
 						JLog.warn(`^ OK`);
@@ -257,7 +257,7 @@ Cluster.on('message', function(worker, msg){
 			if(msg.create && ROOM[msg.id]){
 				for(var i in ROOM[msg.id].players){
 					var $c = DIC[ROOM[msg.id].players[i]];
-					
+
 					if($c) $c.send('roomStuck');
 				}
 				delete ROOM[msg.id];
@@ -275,7 +275,7 @@ exports.init = function(_SID, CHAN){
 	MainDB = require('../web/db');
 	MainDB.ready = function(){
 		JLog.success("Master DB is ready.");
-		
+
 		MainDB.users.update([ 'server', SID ]).set([ 'server', "" ]).on();
 		Server = new WebSocket.Server({
 			port: global.test ? Const.TEST_PORT : PORT,
@@ -300,7 +300,7 @@ exports.init = function(_SID, CHAN){
 				}
 			}
 			var $c;
-			
+
 			socket.on('error', function(err){
 				JLog.warn("Error on #" + key + " on ws: " + err.toString());
 			});
@@ -322,7 +322,7 @@ exports.init = function(_SID, CHAN){
 			}
 			MainDB.session.findOne([ '_id', key ]).limit([ 'profile', true ]).on(function($body){
 				// 손님 서버 (회원 접속 차단)
-				if(SID <= 4){
+				if(SID <= 2){
 					// 회원 차단
 					if($body && GLOBAL.ADMIN.indexOf($body.profile.id) == -1){
 						socket.send(`{ "type": "error", "code": "456" }`);
@@ -337,15 +337,16 @@ exports.init = function(_SID, CHAN){
 						return;
 					}
 				// 회원 서버 (손님 접속 차단)
-				}else if(SID >= 5 && !$body){
+				}
+				else if(SID >= 3 && !$body){
 					socket.send(`{ "type": "error", "code": "457" }`);
 					socket.close();
 					return;
 				}
-				
+
 				$c = new KKuTu.Client(socket, $body ? $body.profile : null, key);
 				$c.admin = GLOBAL.ADMIN.indexOf($c.id) != -1;
-				
+
 				if(DIC[$c.id]){
 					DIC[$c.id].sendError(408);
 					DIC[$c.id].socket.close();
@@ -372,7 +373,7 @@ exports.init = function(_SID, CHAN){
 						DIC[$c.id] = $c;
 						DNAME[($c.profile.title || $c.profile.name).replace(/\s/g, "")] = $c.id;
 						MainDB.users.update([ '_id', $c.id ]).set([ 'server', SID ]).on();
-						
+
 						$c.send('welcome', {
 							id: $c.id,
 							guest: $c.guest,
@@ -388,8 +389,8 @@ exports.init = function(_SID, CHAN){
 						});
 						narrateFriends($c.id, $c.friends, "on");
 						KKuTu.publish('conn', { user: $c.getData() });
-						
-						JLog.info("New user #" + $c.id + "(" + $c.socket._socket.remoteAddress + ")");
+
+						JLog.info("New user #" + $c.id);
 					}else{
 						$c.send('error', {
 							code: ref.result, message: ref.black
@@ -411,14 +412,14 @@ KKuTu.onClientMessage = function($c, msg){
 	var stable = true;
 	var temp;
 	var now = (new Date()).getTime();
-	
+
 	if(!msg) return;
-	
+
 	switch(msg.type){
 		case 'yell':
 			if(!msg.value) return;
 			if(!$c.admin) return;
-			
+
 			$c.publish('yell', { value: msg.value });
 			break;
 		case 'refresh':
@@ -492,18 +493,18 @@ KKuTu.onClientMessage = function($c, msg){
 			if(!msg.round) stable = false;
 			if(!msg.time) stable = false;
 			if(!msg.opts) stable = false;
-			
+
 			msg.code = false;
 			msg.limit = Number(msg.limit);
 			msg.mode = Number(msg.mode);
 			msg.round = Number(msg.round);
 			msg.time = Number(msg.time);
-			
+
 			if(isNaN(msg.limit)) stable = false;
 			if(isNaN(msg.mode)) stable = false;
 			if(isNaN(msg.round)) stable = false;
 			if(isNaN(msg.time)) stable = false;
-			
+
 			if(stable){
 				if(msg.title.length > 20) stable = false;
 				if(msg.password.length > 20) stable = false;
