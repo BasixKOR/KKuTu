@@ -91,7 +91,7 @@
 
 stats{ color: #AAEECC; }
 passive, active, unique, consumable{ color: #CC9955; }
-groupLimit{ color: #EEEEEE; }
+groupLimit{ color: #f0f0f0; }
 aura{ color: #DD99DD; }
 
 #eQuintessence .eRuneCaseTitle{ color: #FFAAFF; }
