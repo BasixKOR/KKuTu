@@ -41,7 +41,7 @@ mixin SettingOptionVolume(id)
 	input(id=id, type='range', min='0', max='1', step='0.01', value='1', style='width:50%;')
 
 block Subject
-	title= L('title')
+	title 호박파이 끄투
 
 block JS
 	script(type='text/javascript', src='/js/in_game_kkutu.min.js')
@@ -52,7 +52,7 @@ block CSS
 block Jungle
 	span#PUBLIC= PUBLIC ? "true" : undefined
 	// span#PORT= locals.PORT
-	span#URL= `ws://ws.${locals.HOST}:${locals.PORT}/${locals._crypted}`
+	span#URL= `ws://${locals.HOST}:${locals.PORT}/${locals._crypted}`
 	span#MOREMI_PART= locals.MOREMI_PART.join(',')
 	span#AVAIL_EQUIP= locals.AVAIL_EQUIP.join(',')
 	span#RULE= JSON.stringify(locals.RULE)
@@ -360,7 +360,7 @@ block Middle
 	+Dialog('DressDiag', 600, 305, L('dress'))
 		div.dialog-bar
 			h4(style='width: 150px;')= L('myNickname')
-			input#dress-nickname(type='textfield', placeholder=L('myNicknameX'), style='width: 435px;', maxlength=30)
+			input#dress-nickname(type='textfield', placeholder=L('myNicknameX'), style='width: 435px;', maxlength=18)
 		div.dialog-bar
 			h4(style='width: 150px;')= L('myExordial')
 			input#dress-exordial(type='textfield', placeholder=L('myExordialX'), style='width: 435px;', maxlength=100)
@@ -459,13 +459,13 @@ block Middle
 		+GraphBar('my-gauge')
 		div.bar-text.my-gauge-text
 	+Product('Chat')
-		div#Chat
-		input#Talk(maxlength=200)
+		div#Chat.inbox-scrollbar
+		input#Talk(maxlength=180)
 		button#ChatBtn= L('send')
 	+Product('AD')
 		script(type="text/javascript") (function(cl,i,c,k,m,o,n){m=cl.location.protocol+c;o=cl.referrer;m+='&mon_rf='+encodeURIComponent(o);n='<'+i+' type="text/javascript" src="'+m+'"></'+i+'>';cl.writeln(n);})(document,'script','//tab2.clickmon.co.kr/pop/wp_ad_728_js.php?PopAd=CM_M_1003067%7C%5E%7CCM_A_1034484%7C%5E%7CAdver_M_1003115&rt_ad_id_code=RTA_104906');
 
 block Bottom
-	div.bottom-legal!= L('Copyright')
-	div.bottom-legal!= L('Dictionary')
 	div.bottom-legal!= L('License')
+	div.bottom-legal!= L('Dictionary')
+	div.bottom-legal!= L('Copyright')

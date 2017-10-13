@@ -53,12 +53,11 @@ html
 			div#global-notice
 				div#gn-content
 					include ../public/kkutu_head.html
-				+Expl(L('GLOBAL_NOTICE'))
 			block Top
 		div#Jungle
 			span#mobile= locals.mobile
 			span#summonerID= DATA._id
-			img#Background(src='/img/bg/'+(locals.bg || 'def.png'))
+			#Background
 			block Jungle
 		div#Middle
 			block Middle

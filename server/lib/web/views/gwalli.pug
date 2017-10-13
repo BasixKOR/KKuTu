@@ -1,4 +1,4 @@
-//
+//-
 	Rule the words! KKuTu Online
 	Copyright (C) 2017 JJoriping(op@jjo.kr)
 	
@@ -17,7 +17,7 @@
 extends layout
 
 block Subject
-	title *** JJO.KR 관리 페이지 ***
+	title 호박파이 끄투 관리자 도구
 
 block JS
 	script(type="text/javascript", src="/js/in_admin.min.js")
@@ -71,12 +71,13 @@ block Middle
 		legend 유저 DB 다루기
 		div
 			input#user-id(placeholder='ID')
-			input#user-nick(placeholder='닉네임')
+			input#user-nick(placeholder='별명')
 			button#user-go 조회
 			div
 				table
 					thead: tr
 						td #
+						td nickname
 						td money
 						td kkutu
 						td box

@@ -43,28 +43,26 @@
 	};
 
 mixin Menu()
-	div.Menu
-		- for(i in MENU)
-			- if(MENU[i].href)
-				button.menu-btn(id='menu-item-'+MENU[i].key, onclick='location.href = "'+MENU[i].href+'";')!= L(MENU[i].key)
-			- else if(MENU[i].sub)
-				div.menu-btn(id='menu-item-'+MENU[i].key)!= L(MENU[i].key)
-					div.menu-sub-separator
-					- for(j in MENU[i].sub)
-						div.menu-sub-btn(onclick='location.href = "'+MENU[i].sub[j].href+'";')!= L(MENU[i].sub[j].key)
-		div#account
-			span#profile= SESSION.profile ? JSON.stringify(SESSION.profile) : '{}'
-			div#account-info
+	nav.navbar.navbar-default.navbar-fixed-top
+		.container
+			.navbar-header
+				a.navbar-brand(href='http://kkutu.io')
+				a.navbar-brand-sub(href='http://kkutu.io') 끄투(끄투리오)
+			ul.nav.navbar-nav.navbar-right
+				div#account
+					span#profile= SESSION.profile ? JSON.stringify(SESSION.profile) : '{}'
+					div#account-info
 
 mixin MMenu()
-	div.Menu
-		div.menu-btn(id='menu-item-GAMES')
-			+FA('bars')
-			+separator(10)
-			div.menu-sub-btn(onclick='location.href = "/";', style='margin: 7px 0px; height: 25px;')!= L('HOME')
-		div#account
-			span#profile= SESSION.profile ? JSON.stringify(SESSION.profile) : '{}'
-			div#account-info
+	nav.navbar.navbar-default.navbar-fixed-top
+		.container
+			.navbar-header
+				a.navbar-brand(href='http://kkutu.io')
+				a.navbar-brand-sub(href='http://kkutu.io') 끄투(끄투리오)
+			ul.nav.navbar-nav.navbar-right
+				div#account
+					span#profile= SESSION.profile ? JSON.stringify(SESSION.profile) : '{}'
+					div#account-info
 
 mixin Image(c, url)
 	div(class="jt-image "+c, style="background-image: url("+url+");")

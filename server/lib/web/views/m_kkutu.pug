@@ -41,7 +41,7 @@ mixin SettingOptionVolume(id)
 	input(id=id, type='range', min='0', max='1', step='0.01', value='1', style='width:50%;')
 
 block Subject
-	title= L('title')
+	title 호박파이 끄투
 	
 block JS
 	script(type='text/javascript', src='/js/in_game_kkutu.min.js')
@@ -51,7 +51,7 @@ block CSS
 	
 block Jungle
 	span#PUBLIC= PUBLIC ? "true" : undefined
-	span#URL= `ws://ws.${locals.HOST}:${locals.PORT}/${locals._crypted}`
+	span#URL= `ws://${locals.HOST}:${locals.PORT}/${locals._crypted}`
 	span#MOREMI_PART= locals.MOREMI_PART.join(',')
 	span#AVAIL_EQUIP= locals.AVAIL_EQUIP.join(',')
 	span#RULE= JSON.stringify(locals.RULE)
@@ -387,6 +387,6 @@ block Middle
 	div#ad
 
 block Bottom
-	div.bottom-legal!= L('Copyright')
-	div.bottom-legal!= L('Dictionary')
 	div.bottom-legal!= L('License')
+	div.bottom-legal!= L('Dictionary')
+	div.bottom-legal!= L('Copyright')

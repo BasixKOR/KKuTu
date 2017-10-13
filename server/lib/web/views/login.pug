@@ -19,9 +19,12 @@ include module
 doctype html
 html
 	head
-		title= L('title')
+		title 호박파이 끄투 로그인
 		+PageHead()
 	body
+		+Menu()
+		br
+		br
 		span#locale= JSON.stringify(LANG)
 		span#stateKey= locals._id
 		div.login-with= locals.text ? L(locals.text) : L('loginWith')
