@@ -17,6 +17,8 @@ Object.defineProperty(talk, "value", {
 })
 // 보내지지 않는 버그 존재함
 */
-talk.onpaste = function (event) {
+function disable (event) {
   event.preventDefault()
 }
+talk.onpaste = disable
+document.getElementById('game-input').onpaste = disable
