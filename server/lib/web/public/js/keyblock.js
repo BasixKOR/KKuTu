@@ -20,5 +20,5 @@ Object.defineProperty(talk, "value", {
 function disable (event) {
   event.preventDefault()
 }
-talk.onpaste = disable
-document.getElementById('game-input').onpaste = disable
+Object.defineProperty(talk, 'onpaste', { value: disable, writable: false })
+Object.defineProperty(document.getElementById('game-input'), 'onpaste', { value: disable, writable: false })
