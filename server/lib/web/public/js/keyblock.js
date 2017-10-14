@@ -4,7 +4,7 @@ Object.defineProperty(window, 'prepareBot', {
 })
 var talk = document.getElementById('Talk')
 /*
-var originalValue = Object.assign({}, talk.value)
+var originalValue = talk.value
 Object.defineProperty(talk, "value", {
   set: function (a) {
     if(/[가-힣]+/.test(originalValue) && a.length !== originalValue.length && /[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎa-zA-Z0-9]/.test(a.slice(-1))) {
